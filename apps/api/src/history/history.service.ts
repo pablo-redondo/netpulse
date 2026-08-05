@@ -1,11 +1,28 @@
 import { Injectable } from '@nestjs/common';
+import type {
+  CheckResult,
+  HourlyStat,
+  UptimeSummary,
+} from '@netpulse/shared-types';
 import { PrismaService } from '../prisma/prisma.service';
 import type { CheckOutcome } from '../checks/checks.interface';
+import type {
+  CheckResult as CheckResultEntity,
+  HourlyStat as HourlyStatEntity,
+} from '#prisma/client';
 
 function startOfHour(date: Date): Date {
   const truncated = new Date(date);
   truncated.setMinutes(0, 0, 0);
   return truncated;
+}
+
+function toCheckResultDto(result: CheckResultEntity): CheckResult {
+  return { ...result, timestamp: result.timestamp.toISOString() };
+}
+
+function toHourlyStatDto(stat: HourlyStatEntity): HourlyStat {
+  return { ...stat, hourBucket: stat.hourBucket.toISOString() };
 }
 
 @Injectable()
@@ -55,5 +72,42 @@ export class HistoryService {
         update: { totalChecks, successChecks, avgLatencyMs },
       });
     });
+  }
+
+  async getLatestResult(serviceId: string): Promise<CheckResult | null> {
+    const result = await this.prisma.checkResult.findFirst({
+      where: { serviceId },
+      orderBy: { timestamp: 'desc' },
+    });
+    return result ? toCheckResultDto(result) : null;
+  }
+
+  // Agrega sobre HourlyStat (no CheckResult) para calcular el uptime sin
+  // escanear cada comprobacion individual.
+  async getUptime(serviceId: string, hours: number): Promise<UptimeSummary> {
+    const since = new Date(Date.now() - hours * 60 * 60 * 1000);
+    const { _sum } = await this.prisma.hourlyStat.aggregate({
+      where: { serviceId, hourBucket: { gte: since } },
+      _sum: { totalChecks: true, successChecks: true },
+    });
+
+    const totalChecks = _sum.totalChecks ?? 0;
+    const successChecks = _sum.successChecks ?? 0;
+    const uptimePercent =
+      totalChecks > 0 ? (successChecks / totalChecks) * 100 : null;
+
+    return { serviceId, hours, totalChecks, uptimePercent };
+  }
+
+  async getLatencyHistory(
+    serviceId: string,
+    hours: number,
+  ): Promise<HourlyStat[]> {
+    const since = new Date(Date.now() - hours * 60 * 60 * 1000);
+    const stats = await this.prisma.hourlyStat.findMany({
+      where: { serviceId, hourBucket: { gte: since } },
+      orderBy: { hourBucket: 'asc' },
+    });
+    return stats.map(toHourlyStatDto);
   }
 }

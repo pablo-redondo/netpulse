@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { ServicesModule } from './services/services.module';
+import { HistoryModule } from './history/history.module';
 import { ScheduleModule } from './schedule/schedule.module';
 
 @Module({
@@ -11,6 +12,7 @@ import { ScheduleModule } from './schedule/schedule.module';
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     ServicesModule,
+    HistoryModule,
     ScheduleModule,
   ],
   controllers: [AppController],

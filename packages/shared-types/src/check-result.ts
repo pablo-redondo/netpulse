@@ -16,3 +16,10 @@ export interface HourlyStat {
   successChecks: number;
   avgLatencyMs: number | null;
 }
+
+export interface UptimeSummary {
+  serviceId: string;
+  hours: number;
+  totalChecks: number;
+  uptimePercent: number | null;
+}
