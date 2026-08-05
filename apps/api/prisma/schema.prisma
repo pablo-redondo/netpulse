@@ -50,6 +50,10 @@ model HourlyStat {
   hourBucket    DateTime         // truncado a la hora
   totalChecks   Int
   successChecks Int
+  // Comprobaciones que devolvieron latencia. Es el denominador de
+  // avgLatencyMs: un timeout cuenta en totalChecks pero no tiene latencia que
+  // promediar, y meterlo en la media la hundiria sin motivo.
+  latencyChecks Int              @default(0)
   avgLatencyMs  Float?
 
   @@unique([serviceId, hourBucket])

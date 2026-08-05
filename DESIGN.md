@@ -168,6 +168,7 @@ model HourlyStat {
   hourBucket    DateTime          // truncado a la hora
   totalChecks   Int
   successChecks Int
+  latencyChecks Int      @default(0) // denominador de avgLatencyMs
   avgLatencyMs  Float?
 
   @@unique([serviceId, hourBucket])
@@ -177,7 +178,13 @@ model HourlyStat {
 
 **Por qué el agregado `HourlyStat`**: calcular uptime % o pintar una gráfica
 de "latencia últimos 30 días" sobre `CheckResult` en crudo (con check cada
-60s → ~43K filas/servicio/mes) obliga a escanear/agrupar en cada request. Un
+5 min → ~8.600 filas/servicio/mes) obliga a escanear/agrupar en cada request.
+Frente a eso, el agregado deja la misma consulta en ~720 filas.
+
+La media de latencia se pondera contra `latencyChecks`, no contra
+`totalChecks`: una comprobación que falla sin llegar a medir nada (un timeout)
+suma al total pero no tiene latencia que promediar, y meterla en el divisor
+hundiría la media de las que sí midieron. Un
 job (dentro del mismo `@Cron` de scheduling, o uno aparte cada hora) va
 escribiendo/actualizando `HourlyStat` mediante upsert. Las consultas de
 dashboard leen `HourlyStat` (pocas filas, indexado por

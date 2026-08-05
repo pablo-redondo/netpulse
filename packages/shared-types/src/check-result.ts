@@ -14,6 +14,8 @@ export interface HourlyStat {
   hourBucket: string;
   totalChecks: number;
   successChecks: number;
+  /** Comprobaciones que devolvieron latencia: el denominador de avgLatencyMs. */
+  latencyChecks: number;
   avgLatencyMs: number | null;
 }
 

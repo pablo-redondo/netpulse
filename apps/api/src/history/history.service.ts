@@ -50,15 +50,20 @@ export class HistoryService {
       const totalChecks = (existing?.totalChecks ?? 0) + 1;
       const successChecks =
         (existing?.successChecks ?? 0) + (outcome.success ? 1 : 0);
-      // Media ponderada incremental sobre las comprobaciones con latencia
-      // conocida; las que fallan sin latencia (ej. timeout) no aportan al
-      // numerador pero si al denominador de totalChecks.
+
+      // Media ponderada incremental. El denominador es latencyChecks, no
+      // totalChecks: una comprobacion que fallo sin llegar a medir nada (un
+      // timeout) no tiene latencia que promediar, y colarla en el divisor
+      // hundiria la media de las que si midieron.
+      const previousLatencyChecks = existing?.latencyChecks ?? 0;
+      const latencyChecks =
+        previousLatencyChecks + (outcome.latencyMs === null ? 0 : 1);
       const avgLatencyMs =
         outcome.latencyMs === null
           ? (existing?.avgLatencyMs ?? null)
-          : ((existing?.avgLatencyMs ?? 0) * (existing?.totalChecks ?? 0) +
+          : ((existing?.avgLatencyMs ?? 0) * previousLatencyChecks +
               outcome.latencyMs) /
-            totalChecks;
+            latencyChecks;
 
       await tx.hourlyStat.upsert({
         where: { serviceId_hourBucket: { serviceId, hourBucket } },
@@ -67,9 +72,10 @@ export class HistoryService {
           hourBucket,
           totalChecks,
           successChecks,
+          latencyChecks,
           avgLatencyMs,
         },
-        update: { totalChecks, successChecks, avgLatencyMs },
+        update: { totalChecks, successChecks, latencyChecks, avgLatencyMs },
       });
     });
   }
