@@ -82,6 +82,21 @@ export class HistoryService {
     return result ? toCheckResultDto(result) : null;
   }
 
+  // Detalle reciente sobre CheckResult en crudo: es la unica vista donde se
+  // ve el errorMessage de cada fallo. Acotado por limit para no crecer con
+  // el historico.
+  async getRecentResults(
+    serviceId: string,
+    limit: number,
+  ): Promise<CheckResult[]> {
+    const results = await this.prisma.checkResult.findMany({
+      where: { serviceId },
+      orderBy: { timestamp: 'desc' },
+      take: limit,
+    });
+    return results.map(toCheckResultDto);
+  }
+
   // Agrega sobre HourlyStat (no CheckResult) para calcular el uptime sin
   // escanear cada comprobacion individual.
   async getUptime(serviceId: string, hours: number): Promise<UptimeSummary> {
@@ -96,7 +111,7 @@ export class HistoryService {
     const uptimePercent =
       totalChecks > 0 ? (successChecks / totalChecks) * 100 : null;
 
-    return { serviceId, hours, totalChecks, uptimePercent };
+    return { serviceId, hours, totalChecks, successChecks, uptimePercent };
   }
 
   async getLatencyHistory(

@@ -21,5 +21,6 @@ export interface UptimeSummary {
   serviceId: string;
   hours: number;
   totalChecks: number;
+  successChecks: number;
   uptimePercent: number | null;
 }
