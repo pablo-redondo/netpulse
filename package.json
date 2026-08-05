@@ -10,6 +10,7 @@
     "dev:api": "pnpm --filter @netpulse/api start:dev",
     "dev:web": "pnpm --filter @netpulse/web dev",
     "build": "pnpm -r build",
+    "test": "pnpm --filter @netpulse/api test",
     "lint": "pnpm -r lint",
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\" --ignore-path .gitignore"
   },

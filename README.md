@@ -232,6 +232,28 @@ encima es un valor que hay gente que no va a poder leer.
 Hay modo claro y oscuro. El oscuro no es una inversión automática del claro:
 son colores elegidos para fondo oscuro.
 
+## Tests
+
+```bash
+pnpm test          # desde la raíz, o
+cd apps/api && pnpm test
+```
+
+Están centrados en las dos zonas donde un fallo pasaría desapercibido a
+simple vista: las tres estrategias de check y el agregado de `HourlyStat`.
+
+Las estrategias van con `fetch`, `dns.Resolver` y `net.Socket` mockeados
+—no salen a internet de verdad al testear—, y cubren tanto el parseo del
+target (`host:puerto`, `hostname@resolverIP`, incluida una IP como host) como
+los casos de fallo: timeout, conexión rechazada, DNS que no resuelve, un 500
+que sí llegó a responder frente a un error de red que no llegó a nada.
+
+El agregado de `HourlyStat` tiene su aritmética sacada a una función pura,
+`accumulateHourlyStat`, justo para poder testearla sin levantar una base de
+datos. Uno de esos tests reproduce literalmente el bug que se coló la primera
+vez: una secuencia `100, 200, timeout, 300` tiene que dar de media 200, no
+187.5.
+
 ## Estado del proyecto
 
 Funciona de punta a punta en local: las comprobaciones se ejecutan, se guardan,
@@ -242,10 +264,5 @@ Lo que falta:
 - Desplegarlo. El backend necesita un proceso que no se duerma, porque si el
   scheduler se para deja huecos en el histórico. Eso apunta a un servicio
   always-on en Render o Railway. El frontend va a Vercel.
-- Tests. Ahora mismo solo está el spec que viene con el scaffold de Nest. Los
-  sitios que más lo piden son las estrategias de check (el parseo de
-  `host:puerto` y `dominio@resolver`, y el manejo de timeouts) y la media
-  ponderada incremental de `HourlyStat`, que es donde hay más aritmética que
-  se puede torcer.
 - Capturas de pantalla aquí, en cuanto esté desplegado y haya datos reales de
   varios días.
