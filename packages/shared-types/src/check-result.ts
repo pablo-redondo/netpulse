@@ -1,0 +1,18 @@
+export interface CheckResult {
+  id: string;
+  serviceId: string;
+  timestamp: string;
+  success: boolean;
+  latencyMs: number | null;
+  statusCode: number | null;
+  errorMessage: string | null;
+}
+
+export interface HourlyStat {
+  id: string;
+  serviceId: string;
+  hourBucket: string;
+  totalChecks: number;
+  successChecks: number;
+  avgLatencyMs: number | null;
+}

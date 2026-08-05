@@ -1,0 +1,19 @@
+{
+  "name": "netpulse",
+  "private": true,
+  "version": "0.1.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "dev:api": "pnpm --filter @netpulse/api start:dev",
+    "dev:web": "pnpm --filter @netpulse/web dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json}\" --ignore-path .gitignore"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3"
+  }
+}

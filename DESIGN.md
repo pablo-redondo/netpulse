@@ -34,6 +34,11 @@ Selección deliberada de 10 servicios públicos, cubriendo los 3 tipos de check:
 
 Esto da 4 HTTP, 3 DNS, 3 TCP — variedad real, no relleno.
 
+Los checks HTTP envían un header `User-Agent` identificable (ej.
+`NetPulse-Monitor/1.0 (portfolio project)`) en cada petición, para que
+cualquier operador de los servicios monitorizados pueda identificar el
+origen del tráfico si revisa sus logs.
+
 ### Por qué no ICMP/ping real
 
 Node.js no tiene acceso a raw sockets sin capacidades elevadas (`CAP_NET_RAW`
@@ -68,7 +73,7 @@ src/
 ├── schedule/                 # Disparo periódico
 │   ├── schedule.module.ts
 │   └── schedule.service.ts  # usa @nestjs/schedule (@Cron / SchedulerRegistry)
-├── services/                 # CRUD de "servicios monitorizados"
+├── services/                 # Lectura de "servicios monitorizados"
 │   ├── services.module.ts
 │   ├── services.controller.ts
 │   └── services.service.ts
@@ -86,8 +91,9 @@ estrategia según el campo `type` del servicio. Añadir un cuarto tipo de check
 en el futuro no toca el scheduler ni el resto del sistema.
 
 **Scheduler**: `@nestjs/schedule` (envuelve `node-cron` con integración DI de
-Nest, más idiomático que usar `node-cron` a pelo). Un único `@Cron` (ej. cada
-60s, configurable por env var) que:
+Nest, más idiomático que usar `node-cron` a pelo). Un único `@Cron` (intervalo
+configurable por env var `CHECK_INTERVAL_MS`, por defecto `300000` = 5
+minutos) que:
 
 1. Lee todos los servicios activos (`ServicesService.findAllActive()`).
 2. Lanza los checks en paralelo (`Promise.allSettled`, para que un timeout en
@@ -98,9 +104,23 @@ No se usa un cron distinto por servicio — con `Promise.allSettled` sobre una
 lista es suficiente a esta escala y evita registrar/desregistrar cron jobs
 dinámicamente cuando se añaden/borran servicios desde la UI.
 
+Se eligen 5 minutos como intervalo por defecto (en vez de 60s) para ser un
+vecino de red respetuoso con los servicios públicos monitorizados — evita
+generar tráfico HTTP/DNS/TCP innecesario contra terceros que no han dado
+permiso explícito para un scrapeo agresivo.
+
 **Persistencia**: cada resultado se escribe directamente en Postgres vía
 Prisma inmediatamente después de ejecutarse el check (sin cola intermedia —
 no hace falta a este volumen).
+
+**Alta de servicios**: no hay endpoints públicos de escritura en
+`ServicesModule`. Los 10 servicios monitorizados se siembran una única vez
+mediante `prisma/seed.ts` tras el primer despliegue (ver punto 5 del seed).
+El controller de `services` expone únicamente lecturas (`GET /services`,
+`GET /services/:id`); no hay `POST`/`PATCH`/`DELETE`. Esto simplifica el
+alcance (sin autenticación/autorización que proteger) y es coherente con que
+la lista de servicios monitorizados es curada y fija, no gestionada por
+usuarios finales.
 
 ## 4. Esquema de datos (Prisma)
 
@@ -113,7 +133,7 @@ enum CheckType {
 
 model MonitoredService {
   id          String   @id @default(cuid())
-  name        String
+  name        String   @unique // permite upsert idempotente desde prisma/seed.ts
   type        CheckType
   target      String   // URL para HTTP, hostname para DNS, "host:port" para TCP
   vlanGroup   String?  // agrupación ilustrativa para la vista de topología (ver punto 5)
@@ -250,7 +270,12 @@ configurando el "root directory".
 
 ---
 
-**Pendiente de aprobación.** Tras el visto bueno, el siguiente paso es
-únicamente el scaffolding inicial (estructura de carpetas + workspace +
-configs base, sin lógica de negocio todavía), no el proyecto completo de
-golpe.
+**Estado: aprobado** (con dos ajustes incorporados sobre la propuesta
+inicial: `ServicesModule` de solo lectura con siembra vía `prisma/seed.ts`,
+y checks HTTP con `User-Agent` identificable + intervalo del scheduler a
+5 minutos por defecto vía `CHECK_INTERVAL_MS`).
+
+Paso 1 (scaffolding inicial, sin lógica de checks/scheduler todavía):
+monorepo pnpm workspaces, NestJS + Prisma en `apps/api`, Next.js en
+`apps/web`, `packages/shared-types`, seed con los 10 servicios, lint/format,
+README mínimo.

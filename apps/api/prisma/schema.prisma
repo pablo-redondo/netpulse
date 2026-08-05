@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum CheckType {
+  HTTP
+  DNS
+  TCP
+}
+
+model MonitoredService {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  type        CheckType
+  target      String   // URL para HTTP, hostname para DNS, "host:port" para TCP
+  vlanGroup   String?  // agrupacion ilustrativa para la vista de topologia
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  results     CheckResult[]
+  hourlyStats HourlyStat[]
+
+  @@index([isActive])
+}
+
+model CheckResult {
+  id           String           @id @default(cuid())
+  serviceId    String
+  service      MonitoredService @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  timestamp    DateTime         @default(now())
+  success      Boolean
+  latencyMs    Int?
+  statusCode   Int?             // solo relevante para HTTP
+  errorMessage String?
+
+  @@index([serviceId, timestamp(sort: Desc)])
+}
+
+// Agregado pre-calculado para que las graficas de historico y el % de uptime
+// no tengan que escanear CheckResult completa en cada peticion.
+model HourlyStat {
+  id            String           @id @default(cuid())
+  serviceId     String
+  service       MonitoredService @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  hourBucket    DateTime         // truncado a la hora
+  totalChecks   Int
+  successChecks Int
+  avgLatencyMs  Float?
+
+  @@unique([serviceId, hourBucket])
+  @@index([serviceId, hourBucket(sort: Desc)])
+}
