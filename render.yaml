@@ -1,0 +1,37 @@
+# Blueprint de Render para el backend. El frontend (apps/web) va a Vercel
+# por separado, ver README.md.
+#
+# El plan "free" de Render duerme el servicio a los 15 min sin trafico HTTP
+# (parando el scheduler con el) y su Postgres gratis expira a los 30 dias.
+# Sirve para probar el despliegue sin coste; para monitorizacion continua
+# real hace falta subir el servicio web a un plan de pago (ej. "starter").
+databases:
+  - name: netpulse-db
+    plan: free
+    region: oregon
+
+services:
+  - type: web
+    name: netpulse-api
+    runtime: node
+    plan: free
+    region: oregon
+    branch: main
+    healthCheckPath: /
+    buildCommand: >-
+      corepack enable &&
+      corepack prepare pnpm@10.33.0 --activate &&
+      pnpm install --frozen-lockfile &&
+      pnpm --filter @netpulse/shared-types build &&
+      pnpm --filter @netpulse/api prisma:migrate &&
+      pnpm --filter @netpulse/api build
+    startCommand: pnpm --filter @netpulse/api start:prod
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: netpulse-db
+          property: connectionString
+      - key: CHECK_INTERVAL_MS
+        value: "300000"

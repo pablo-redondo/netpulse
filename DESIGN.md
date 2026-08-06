@@ -226,21 +226,25 @@ pesada (no hace falta layout dinámico, la posición de VLANs es fija/manual).
 
 ## 6. Plan de despliegue
 
-- **Backend (NestJS + Postgres)** → Render o Railway, como proceso
-  persistente (Web Service, no serverless), porque `@nestjs/schedule`
-  necesita un proceso vivo continuamente para que el cron dispare — mismo
-  patrón que `restaurant-api`.
+- **Backend (NestJS + Postgres)** → Render, como proceso persistente (Web
+  Service, no serverless), porque `@nestjs/schedule` necesita un proceso
+  vivo continuamente para que el cron dispare — mismo patrón que
+  `restaurant-api`. Se decidió Render sobre Railway por tener soporte de
+  Blueprint-as-code (`render.yaml`) que deja el backend y la base de datos
+  reproducibles desde el propio repo, sin configuración manual en el
+  dashboard.
 - **Frontend (Next.js/React)** → Vercel.
-- **Comunicación**: el frontend llama al backend vía HTTPS (REST). Igual que
-  en `restaurant-web/api`, si el plan de Render/Railway es free tier con
-  cold-start, el frontend debe manejar el spin-up inicial (loading state con
-  reintento/timeout más largo en la primera petición, o un "warm ping" al
-  montar la página). A diferencia de restaurant-api, aquí el backend **no
-  puede dormir del todo** entre requests porque el scheduler debe seguir
-  corriendo — esto en la práctica empuja a un plan de pago o a un servicio
-  always-on de Render, decisión/trade-off que se documentará en el README
-  (free tier = gaps en el histórico durante el sueño; plan pago =
-  monitorización continua real).
+- **Comunicación**: el frontend llama al backend vía HTTPS (REST) desde
+  server components, nunca desde el navegador — así no hace falta CORS
+  aunque frontend y backend vivan en dominios distintos. Igual que en
+  `restaurant-web/api`, si el plan de Render es free tier con cold-start, el
+  frontend maneja el spin-up inicial con un reintento y un timeout más largo
+  en la primera petición (ver `apps/web/lib/api.ts`). A diferencia de
+  restaurant-api, aquí el backend **no puede dormir del todo** entre
+  requests porque el scheduler debe seguir corriendo — esto en la práctica
+  empuja a un plan de pago o a un servicio always-on de Render,
+  decisión/trade-off documentada también en el README (free tier = gaps en
+  el histórico durante el sueño; plan pago = monitorización continua real).
 
 ## 7. Estructura de repos
 
@@ -271,9 +275,13 @@ netpulse/
 └── README.md
 ```
 
-Despliegue: Render/Railway apunta a `apps/api` como root del build; Vercel
-apunta a `apps/web` — ambos soportan monorepos pnpm sin fricción
-configurando el "root directory".
+Despliegue: en Render el `render.yaml` de la raíz define build/start con
+`pnpm --filter @netpulse/api ...` en vez de fijar un "root directory", porque
+`pnpm --filter` ya detecta el workspace subiendo directorios y así el build
+puede compilar primero `shared-types`. Vercel sí usa el "root directory"
+(`apps/web`) porque ahí el framework se detecta automáticamente; el mismo
+problema de orden se resuelve con un hook `prebuild` en `apps/web/package.json`
+que compila `shared-types` antes de `next build`.
 
 ---
 
