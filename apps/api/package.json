@@ -9,12 +9,12 @@
     "#prisma/client": "./generated/prisma/client.js"
   },
   "scripts": {
-    "prebuild": "prisma generate",
+    "prebuild": "pnpm --filter @netpulse/shared-types build && prisma generate",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "prestart": "prisma generate",
+    "prestart": "pnpm --filter @netpulse/shared-types build && prisma generate",
     "start": "nest start",
-    "prestart:dev": "prisma generate",
+    "prestart:dev": "pnpm --filter @netpulse/shared-types build && prisma generate",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/src/main.js",
