@@ -254,15 +254,65 @@ datos. Uno de esos tests reproduce literalmente el bug que se coló la primera
 vez: una secuencia `100, 200, timeout, 300` tiene que dar de media 200, no
 187.5.
 
+## Despliegue
+
+El backend va a Render y el frontend a Vercel, cada uno por su lado. La razón
+de que sean dos sitios distintos y no todo junto es que el backend necesita
+seguir vivo entre peticiones —tiene un scheduler corriendo dentro— y eso pide
+un proceso persistente, mientras que el frontend es un montón de páginas que
+se sirven bajo demanda y encajan mejor en algo como Vercel.
+
+### Backend (Render)
+
+Hay un `render.yaml` en la raíz que describe el servicio y la base de datos,
+así que no hace falta rellenar formularios a mano:
+
+1. En Render, "New +" → "Blueprint", y apuntar al repo en la rama `main`.
+   Render lee `render.yaml` y propone crear `netpulse-db` (Postgres) y
+   `netpulse-api` (el backend). Se aceptan los dos.
+2. El build ya se encarga de instalar, compilar `shared-types`, aplicar las
+   migraciones de Prisma y compilar el backend, en ese orden. No hay que
+   tocar nada más para que arranque.
+3. Sembrar los 10 servicios es cosa de una vez, y a mano: desde el shell del
+   servicio en el dashboard de Render,
+   `pnpm --filter @netpulse/api prisma:seed`. Como el seed hace upsert por
+   nombre, se puede volver a lanzar sin miedo si algún día hace falta.
+
+El plan `free` de Render dura lo justo para comprobar que todo esto funciona:
+el servicio se duerme a los 15 minutos sin tráfico HTTP —y con él, el
+scheduler, así que el histórico se queda con huecos mientras tanto— y la base
+de datos gratis expira a los 30 días. Para que esto sea un monitor de verdad y
+no un experimento de fin de semana, el paso siguiente es subir `netpulse-api`
+a un plan de pago tipo Starter, que no se duerme.
+
+### Frontend (Vercel)
+
+1. Importar el repo en Vercel. El framework se detecta solo; lo único que
+   hay que fijar a mano es el **Root Directory**: `apps/web`.
+2. Una variable de entorno: `NETPULSE_API_URL`, con la URL pública que dio
+   Render (algo como `https://netpulse-api.onrender.com`).
+
+No hace falta tocar CORS en ningún sitio. El frontend llama a la API desde
+server components, no desde el navegador, así que esas peticiones nunca
+cruzan de dominio desde el punto de vista de un navegador —van de servidor a
+servidor.
+
+Lo que sí toca el navegador es el primer visitante después de que Render haya
+dormido el backend: esa petición tarda de más mientras la instancia arranca.
+`lib/api.ts` ya cuenta con esto —reintenta una vez con un margen bastante
+más generoso antes de rendirse— y si aun así no llega a tiempo, el panel
+enseña un aviso en vez de un error pelado.
+
 ## Estado del proyecto
 
-Funciona de punta a punta en local: las comprobaciones se ejecutan, se guardan,
-se agregan y se pintan.
+Funciona de punta a punta en local: las comprobaciones se ejecutan, se
+guardan, se agregan y se pintan. El despliegue está preparado y probado —el
+build completo y las migraciones se han corrido de principio a fin contra una
+base de datos limpia, tal cual las ejecutaría Render— pero la instancia real
+en Render y Vercel la tiene que levantar quien clone esto, porque hace falta
+una cuenta en cada sitio.
 
 Lo que falta:
 
-- Desplegarlo. El backend necesita un proceso que no se duerma, porque si el
-  scheduler se para deja huecos en el histórico. Eso apunta a un servicio
-  always-on en Render o Railway. El frontend va a Vercel.
-- Capturas de pantalla aquí, en cuanto esté desplegado y haya datos reales de
-  varios días.
+- Las capturas de pantalla de este README, en cuanto haya una instancia real
+  desplegada y unos días de datos reales encima.
