@@ -35,3 +35,5 @@ services:
           property: connectionString
       - key: CHECK_INTERVAL_MS
         value: "300000"
+      - key: SEED_SECRET
+        generateValue: true

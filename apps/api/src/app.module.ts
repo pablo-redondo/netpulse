@@ -6,6 +6,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ServicesModule } from './services/services.module';
 import { HistoryModule } from './history/history.module';
 import { ScheduleModule } from './schedule/schedule.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { ScheduleModule } from './schedule/schedule.module';
     ServicesModule,
     HistoryModule,
     ScheduleModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],
