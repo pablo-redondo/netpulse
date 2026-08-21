@@ -5,6 +5,14 @@ export const contentType = 'image/png';
 
 const PROTOCOLS = ['HTTP', 'DNS', 'TCP', 'TLS', 'NTP'];
 
+// Colores literales (no tokens CSS): esto se rasteriza en el servidor, fuera
+// del documento, asi que aqui no hay variables que resolver.
+const PLANE = '#050805';
+const ACCENT = '#3df62d';
+const INK = '#e3f7e6';
+const MUTED = '#6f8a74';
+const LINE = 'rgba(61,246,45,0.14)';
+
 export default function OpengraphImage() {
   return new ImageResponse(
     (
@@ -16,68 +24,75 @@ export default function OpengraphImage() {
           flexDirection: 'column',
           justifyContent: 'center',
           padding: '80px',
-          background: '#0d0d0d',
-          fontFamily: 'system-ui, sans-serif',
+          background: PLANE,
+          fontFamily: 'monospace',
         }}
       >
+        {/* Rejilla de fondo, como la del panel */}
         <div
           style={{
             position: 'absolute',
             inset: 0,
             display: 'flex',
-            backgroundImage:
-              'linear-gradient(#2c2c2a 1px, transparent 1px), linear-gradient(90deg, #2c2c2a 1px, transparent 1px)',
-            backgroundSize: '48px 48px',
-            opacity: 0.4,
+            backgroundImage: `linear-gradient(${LINE} 1px, transparent 1px), linear-gradient(90deg, ${LINE} 1px, transparent 1px)`,
+            backgroundSize: '44px 44px',
           }}
         />
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
           <div
             style={{
               display: 'flex',
-              width: 20,
-              height: 20,
+              width: 18,
+              height: 18,
               borderRadius: '50%',
-              background: '#0ca30c',
-              boxShadow: '0 0 0 8px rgba(12,163,12,0.18)',
+              background: ACCENT,
+              boxShadow: `0 0 24px ${ACCENT}`,
             }}
           />
-          <div style={{ display: 'flex', fontSize: 40, fontWeight: 700, color: '#ffffff' }}>
+          <div style={{ display: 'flex', fontSize: 44, fontWeight: 700, color: ACCENT }}>
             NetPulse
+          </div>
+          <div style={{ display: 'flex', fontSize: 26, color: MUTED }}>
+            {'// monitor de red'}
           </div>
         </div>
 
         <div
           style={{
             display: 'flex',
-            marginTop: 28,
-            fontSize: 30,
-            color: '#c3c2b7',
-            maxWidth: 880,
+            marginTop: 30,
+            fontSize: 34,
+            color: INK,
+            maxWidth: 900,
+            lineHeight: 1.3,
           }}
         >
           Monitorización de red e infraestructura en tiempo real
         </div>
 
-        <div style={{ display: 'flex', gap: 12, marginTop: 48 }}>
+        <div style={{ display: 'flex', gap: 12, marginTop: 44 }}>
           {PROTOCOLS.map((protocol) => (
             <div
               key={protocol}
               style={{
                 display: 'flex',
-                padding: '10px 20px',
-                borderRadius: 999,
-                border: '1px solid #383835',
-                color: '#3987e5',
+                padding: '10px 22px',
+                borderRadius: 4,
+                border: `1px solid ${LINE}`,
+                color: ACCENT,
                 fontSize: 22,
                 fontWeight: 600,
-                letterSpacing: 1,
+                letterSpacing: 2,
               }}
             >
               {protocol}
             </div>
           ))}
+        </div>
+
+        <div style={{ display: 'flex', marginTop: 40, fontSize: 20, color: MUTED }}>
+          uptime · latencia · incidentes · certificados TLS · desfase NTP
         </div>
       </div>
     ),

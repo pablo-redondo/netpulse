@@ -291,8 +291,38 @@ distintos. Y la gráfica de latencia tiene debajo un desplegable con los mismos
 datos en tabla, porque un valor que solo puedes leer pasando el ratón por
 encima es un valor que hay gente que no va a poder leer.
 
-Hay modo claro y oscuro. El oscuro no es una inversión automática del claro:
-son colores elegidos para fondo oscuro.
+### El tema, y por qué los colores no están elegidos a ojo
+
+El panel va en negro con verde de fósforo, como una terminal antigua. No hay
+modo claro: la pantalla negra *es* la identidad del proyecto, y una variante
+clara sería otra cosa distinta con el mismo nombre. Lo que sí se puede apagar,
+desde la cabecera, son los efectos de CRT —las scanlines y el brillo—, por si
+resultan ruidosos o incómodos de leer. Toda la interfaz va en JetBrains Mono,
+que además trae cifras tabulares de serie, que es justo lo que quieren las
+tablas y los ejes.
+
+El problema interesante del tema es que el verde de fósforo quiere ser dos
+cosas a la vez: la identidad de la marca y el color de "esto va bien". Si todo
+es verde neón, "operativo" deja de significar nada. Se resuelve en tres capas:
+
+- El **verde saturado** queda reservado para el estado OK y unos pocos acentos
+  de identidad. El resto del chrome —bordes, rejilla, texto secundario— usa
+  verdes desaturados que no compiten.
+- La **serie de datos** (la latencia) va en cian, no en verde: así la gráfica
+  nunca se confunde con el semáforo de estado.
+- En las superficies donde lo sano se repite mucho —las barras de
+  disponibilidad por hora, la tira de sondas— el verde va **atenuado**. Lo
+  sano es el fondo; lo que falla es lo que tiene que saltar a la vista.
+
+Los valores concretos no están elegidos a ojo: salen de una búsqueda sobre el
+espacio OKLCH validada con un script contra la superficie real del panel,
+exigiendo que cualquier par de colores se distinga tanto en visión normal como
+simulando protanopia y deuteranopia. El primer intento —verde `#00ff41` con un
+ámbar clásico— fallaba precisamente ahí: con deuteranopia los dos colores se
+juntaban (ΔE 5.2, por debajo del suelo de 6), y "operativo" e "inestable" son
+justo los dos estados que no se pueden confundir en un monitor. La paleta final
+mide ΔE 10.1 en el peor par bajo daltonismo y 26.7 en visión normal, y todos
+los colores pasan de 3:1 de contraste contra el fondo.
 
 ## Tests
 

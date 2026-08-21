@@ -1,10 +1,10 @@
 export function Skeleton({ className = '' }: { className?: string }) {
-  return <div className={`animate-pulse rounded-md bg-hairline ${className}`} />;
+  return <div className={`animate-pulse rounded-sm bg-surface-2 ${className}`} />;
 }
 
 export function ServiceCardSkeleton() {
   return (
-    <div className="rounded-lg border border-hairline bg-surface-1 p-4">
+    <div className="rounded border border-hairline bg-surface-1 p-4">
       <div className="flex items-start justify-between gap-3">
         <Skeleton className="h-4 w-32" />
         <Skeleton className="h-4 w-10" />
@@ -31,7 +31,7 @@ export function ServiceGridSkeleton({ count = 6 }: { count?: number }) {
 
 export function StatTileSkeleton() {
   return (
-    <div className="rounded-lg border border-hairline bg-surface-1 p-4">
+    <div className="rounded border border-hairline bg-surface-1 p-4">
       <Skeleton className="h-4 w-28" />
       <Skeleton className="mt-3 h-7 w-20" />
       <Skeleton className="mt-2 h-3 w-36" />

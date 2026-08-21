@@ -1,15 +1,22 @@
 import type { ServiceState } from '@/lib/format';
 
 // El color de status nunca carga el significado solo: cada estado va
-// siempre acompanado de icono + etiqueta de texto.
+// siempre acompanado de icono + etiqueta de texto. Las formas de los glifos
+// son distintas entre si (no solo el color), asi que el estado se lee igual
+// sin distinguir tonos.
 const STATE_META: Record<
   ServiceState,
-  { label: string; color: string; icon: 'check' | 'cross' | 'alert' | 'dash' }
+  { label: string; short: string; color: string; icon: 'check' | 'cross' | 'alert' | 'dash' }
 > = {
-  up: { label: 'Operativo', color: 'var(--status-good)', icon: 'check' },
-  unstable: { label: 'Inestable', color: 'var(--status-warning)', icon: 'alert' },
-  down: { label: 'Caído', color: 'var(--status-critical)', icon: 'cross' },
-  unknown: { label: 'Sin datos', color: 'var(--text-muted)', icon: 'dash' },
+  up: { label: 'Operativo', short: 'UP', color: 'var(--status-good)', icon: 'check' },
+  unstable: {
+    label: 'Inestable',
+    short: 'WARN',
+    color: 'var(--status-warning)',
+    icon: 'alert',
+  },
+  down: { label: 'Caído', short: 'DOWN', color: 'var(--status-critical)', icon: 'cross' },
+  unknown: { label: 'Sin datos', short: 'N/D', color: 'var(--text-muted)', icon: 'dash' },
 };
 
 function StateIcon({ icon, color }: { icon: string; color: string }) {
@@ -63,6 +70,24 @@ export function StatusBadge({ state }: { state: ServiceState }) {
     <span className="inline-flex items-center gap-1.5 text-sm font-medium text-text-secondary">
       <StateIcon icon={meta.icon} color={meta.color} />
       {meta.label}
+    </span>
+  );
+}
+
+/** Variante compacta para tablas y listas densas. */
+export function StatusChip({ state }: { state: ServiceState }) {
+  const meta = STATE_META[state];
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 rounded border px-1.5 py-0.5 text-[11px] font-medium tracking-wide"
+      style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
+    >
+      <span
+        aria-hidden
+        className="inline-block h-1.5 w-1.5 rounded-full"
+        style={{ background: meta.color }}
+      />
+      {meta.short}
     </span>
   );
 }

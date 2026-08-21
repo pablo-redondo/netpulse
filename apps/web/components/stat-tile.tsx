@@ -9,19 +9,19 @@ interface StatTileProps {
 }
 
 /**
- * Contrato de stat tile: label en sentence case sin dos puntos, valor en sans
- * semibold con cifras proporcionales (nunca tabular-nums en cifras grandes
- * standalone), y tendencia opcional.
+ * Contrato de stat tile: label en mayusculas discretas como cabecera de
+ * campo de terminal, valor grande, y tendencia opcional. El valor va en la
+ * cara mono del tema, que ya trae cifras tabulares.
  */
 export function StatTile({ label, value, hint, trend }: StatTileProps) {
   return (
-    <div className="rounded-lg border border-hairline bg-surface-1 p-4">
-      <div className="text-sm text-text-secondary">{label}</div>
-      <div className="mt-1 flex items-end justify-between gap-3">
+    <div className="relative rounded border border-hairline bg-surface-1 p-4 transition-colors hover:border-hairline-strong">
+      <div className="text-[11px] tracking-widest text-text-muted uppercase">{label}</div>
+      <div className="mt-2 flex items-end justify-between gap-3">
         <div className="text-2xl font-semibold text-text-primary">{value}</div>
         {trend}
       </div>
-      {hint && <div className="mt-1 text-xs text-text-muted">{hint}</div>}
+      {hint && <div className="mt-1.5 text-xs text-text-muted">{hint}</div>}
     </div>
   );
 }

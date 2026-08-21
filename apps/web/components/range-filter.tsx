@@ -1,9 +1,9 @@
 import Link from 'next/link';
 
 export const RANGES = [
-  { hours: 24, label: 'Últimas 24 h' },
-  { hours: 168, label: 'Últimos 7 días' },
-  { hours: 720, label: 'Últimos 30 días' },
+  { hours: 24, label: '24 h' },
+  { hours: 168, label: '7 d' },
+  { hours: 720, label: '30 d' },
 ] as const;
 
 export function parseRange(value: string | undefined): number {
@@ -13,11 +13,13 @@ export function parseRange(value: string | undefined): number {
 
 /**
  * Fila unica de filtro, por encima de todo lo que escopa: cada stat, grafica
- * y tabla de la pagina se recalcula contra la misma ventana.
+ * y tabla de la pagina se recalcula contra la misma ventana. Se presenta como
+ * un control segmentado; el seleccionado lleva ademas aria-current, no solo
+ * un fondo distinto.
  */
 export function RangeFilter({ basePath, hours }: { basePath: string; hours: number }) {
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="inline-flex items-center gap-1 rounded border border-hairline p-0.5">
       {RANGES.map((range) => {
         const selected = range.hours === hours;
         return (
@@ -27,8 +29,8 @@ export function RangeFilter({ basePath, hours }: { basePath: string; hours: numb
             aria-current={selected ? 'true' : undefined}
             className={
               selected
-                ? 'rounded-md border border-hairline bg-surface-1 px-3 py-1.5 text-sm font-medium text-text-primary'
-                : 'rounded-md border border-transparent px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary'
+                ? 'rounded-sm bg-surface-2 px-3 py-1 text-xs font-medium text-accent'
+                : 'rounded-sm px-3 py-1 text-xs text-text-muted transition-colors hover:text-text-secondary'
             }
           >
             {range.label}

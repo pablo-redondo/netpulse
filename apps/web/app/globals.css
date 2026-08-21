@@ -1,80 +1,68 @@
 @import "tailwindcss";
 
 /*
- * Design tokens — instancia de la paleta de referencia de dataviz.
- * Los valores dark son pasos elegidos para la superficie oscura, no un
- * flip automatico de los claros.
+ * Tema "fosforo": terminal CRT de fosforo verde sobre negro.
+ *
+ * El tema se compromete con el modo oscuro. No hay variante clara: la
+ * identidad del panel ES la pantalla negra, y una version clara seria otra
+ * cosa distinta disfrazada. El unico interruptor es el de efectos CRT
+ * (scanlines y glow), que se apaga desde la cabecera para quien prefiera
+ * menos ruido visual.
+ *
+ * Los colores de estado y de serie NO son elegidos a ojo: salen de una
+ * busqueda sobre OKLCH validada con el script del skill de dataviz contra
+ * la superficie real (#0e130e), exigiendo separacion CVD >= 10 (objetivo 8)
+ * y suelo de vision normal >= 15. Resultado medido, todos los pares:
+ *   peor par CVD    ΔE 10.1  (ambar ↔ verde, deuteranopia)
+ *   peor par normal ΔE 26.7
+ * El verde fosforo hace doble trabajo (identidad + estado OK), asi que el
+ * resto de la interfaz usa verdes DESATURADOS: si todo fuese verde neon,
+ * "operativo" dejaria de significar nada.
  */
 :root {
-  color-scheme: light;
-
-  /* Superficies */
-  --plane: #f9f9f7;
-  --surface-1: #fcfcfb;
-
-  /* Tinta */
-  --text-primary: #0b0b0b;
-  --text-secondary: #52514e;
-  --text-muted: #898781;
-
-  /* Chrome de grafica */
-  --gridline: #e1e0d9;
-  --axis: #c3c2b7;
-  --border: rgba(11, 11, 11, 0.1);
-
-  /* Serie categorica (una sola: latencia) */
-  --series-1: #2a78d6;
-
-  /* Status (paleta fija, nunca tematizada) */
-  --status-good: #0ca30c;
-  --status-warning: #fab219;
-  --status-critical: #d03b3b;
-  --status-good-text: #006300;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:where(:not([data-theme="light"])) {
-    color-scheme: dark;
-
-    --plane: #0d0d0d;
-    --surface-1: #1a1a19;
-
-    --text-primary: #ffffff;
-    --text-secondary: #c3c2b7;
-    --text-muted: #898781;
-
-    --gridline: #2c2c2a;
-    --axis: #383835;
-    --border: rgba(255, 255, 255, 0.1);
-
-    --series-1: #3987e5;
-
-    --status-good-text: #0ca30c;
-  }
-}
-
-:root[data-theme="dark"] {
   color-scheme: dark;
 
-  --plane: #0d0d0d;
-  --surface-1: #1a1a19;
+  /* Superficies: negro con un punto de verde, no gris neutro */
+  --plane: #050805;
+  --surface-1: #0e130e;
+  --surface-2: #141b14;
 
-  --text-primary: #ffffff;
-  --text-secondary: #c3c2b7;
-  --text-muted: #898781;
+  /* Tinta (contrastes medidos contra --surface-1) */
+  --text-primary: #e3f7e6;   /* 16.74:1 */
+  --text-secondary: #9db8a1; /*  8.77:1 */
+  --text-muted: #6f8a74;     /*  4.98:1 */
 
-  --gridline: #2c2c2a;
-  --axis: #383835;
-  --border: rgba(255, 255, 255, 0.1);
+  /* Chrome de grafica: recesivo a proposito */
+  --gridline: #1c2a1d;
+  --axis: #2b3f2d;
+  --border: rgba(61, 246, 45, 0.14);
+  --border-strong: rgba(61, 246, 45, 0.32);
 
-  --series-1: #3987e5;
+  /* Serie categorica (una sola: latencia). Cian dentro de la banda oscura
+     (L 0.661) para no competir con el verde de estado. */
+  --series-1: #0aa0d2;
 
-  --status-good-text: #0ca30c;
+  /* Estado: reservado, siempre con icono + etiqueta, nunca color a secas */
+  --status-good: #3df62d;
+  --status-warning: #ea9602;
+  --status-critical: #d50b56;
+  --status-good-text: #3df62d;
+  /* Verde "OK" atenuado (3.42:1 sobre la superficie, por encima del minimo
+     de 3:1 para marcas). Se usa donde lo sano se repite mucho —barras de
+     disponibilidad, tira de sondas—: si esas superficies fuesen verde neon,
+     la pantalla entera gritaria y los incidentes dejarian de destacar. Lo
+     sano es el fondo; lo roto es lo que tiene que saltar a la vista. */
+  --status-good-dim: #23791c;
+
+  /* Acento de identidad = el verde de estado OK, usado con cuentagotas */
+  --accent: #3df62d;
+  --accent-dim: rgba(61, 246, 45, 0.55);
 }
 
 @theme inline {
   --color-plane: var(--plane);
   --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
 
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
@@ -83,25 +71,152 @@
   --color-gridline: var(--gridline);
   --color-axis: var(--axis);
   --color-hairline: var(--border);
+  --color-hairline-strong: var(--border-strong);
 
   --color-series-1: var(--series-1);
 
   --color-status-good: var(--status-good);
+  --color-status-good-dim: var(--status-good-dim);
   --color-status-warning: var(--status-warning);
   --color-status-critical: var(--status-critical);
   --color-status-good-text: var(--status-good-text);
 
-  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --color-accent: var(--accent);
+
+  /* La cara mono es la voz de la interfaz entera: es un panel de maquina.
+     Ademas sus cifras ya son tabulares, que es justo lo que quieren las
+     tablas y los ejes. La variable la inyecta next/font desde el layout. */
+  --font-sans: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular",
+    "Menlo", "Consolas", monospace;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular",
+    "Menlo", "Consolas", monospace;
+}
+
+html {
+  /* Rejilla tenue de fondo: evoca un diagrama de red / un osciloscopio sin
+     robarle atencion a los datos. */
+  background-color: var(--plane);
+  background-image:
+    linear-gradient(rgba(61, 246, 45, 0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(61, 246, 45, 0.028) 1px, transparent 1px);
+  background-size: 44px 44px;
+  background-position: center top;
 }
 
 body {
-  background: var(--plane);
   color: var(--text-primary);
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
+  /* Vineta: hunde las esquinas como el cristal curvo de un CRT. */
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(61, 246, 45, 0.05), transparent 60%),
+    radial-gradient(100% 100% at 50% 100%, rgba(0, 0, 0, 0.55), transparent 70%);
 }
 
-/* Columnas de numeros que deben alinearse verticalmente. Nunca en cifras
- * grandes standalone (hero, stat tiles): ahi van cifras proporcionales. */
+/* Scanlines: capa fija sobre todo, no interactiva. Muy sutil a proposito —
+   una rejilla marcada destroza la legibilidad del texto pequeño. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0px,
+    rgba(0, 0, 0, 0) 2px,
+    rgba(0, 0, 0, 0.16) 3px,
+    rgba(0, 0, 0, 0.16) 4px
+  );
+  opacity: 0.5;
+}
+
+/* Interruptor de efectos CRT (cabecera). Apaga scanlines y glow. */
+:root[data-crt="off"] body::after {
+  display: none;
+}
+:root[data-crt="off"] .glow,
+:root[data-crt="off"] .glow-soft {
+  text-shadow: none;
+}
+
+/* Glow de fosforo: solo en texto de acento, nunca en parrafos. */
+.glow {
+  text-shadow: 0 0 12px rgba(61, 246, 45, 0.45);
+}
+.glow-soft {
+  text-shadow: 0 0 18px rgba(61, 246, 45, 0.28);
+}
+
+/* Columnas de numeros que deben alinearse verticalmente. Con una cara mono
+   ya son tabulares, pero lo dejamos explicito por si cae un fallback. */
 .tabular {
   font-variant-numeric: tabular-nums;
+}
+
+/* Etiqueta de seccion tipo terminal: "── ETIQUETA ──────" */
+.rule-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  white-space: nowrap;
+}
+.rule-label::after {
+  content: "";
+  flex: 1 1 auto;
+  height: 1px;
+  background: linear-gradient(90deg, var(--border-strong), transparent);
+}
+
+::selection {
+  background: rgba(61, 246, 45, 0.28);
+  color: var(--text-primary);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Scrollbar a juego, sin romper el scroll nativo */
+* {
+  scrollbar-color: var(--axis) transparent;
+  scrollbar-width: thin;
+}
+
+/* El cursor parpadeante y cualquier pulso se detienen si el sistema pide
+   menos movimiento. */
+@keyframes caret-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+.caret {
+  display: inline-block;
+  width: 0.55em;
+  height: 1em;
+  vertical-align: text-bottom;
+  background: var(--accent);
+  animation: caret-blink 1.1s steps(1) infinite;
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 0.55; }
+  70% { transform: scale(2.4); opacity: 0; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+.pulse-ring {
+  animation: pulse-ring 2.4s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caret {
+    animation: none;
+    opacity: 1;
+  }
+  .pulse-ring {
+    animation: none;
+    opacity: 0;
+  }
+  .animate-pulse {
+    animation: none;
+  }
 }

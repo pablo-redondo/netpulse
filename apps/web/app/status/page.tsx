@@ -2,14 +2,15 @@ import { ApiUnavailableError, getDashboard, getRecentIncidents } from '@/lib/api
 import { stateOf, type ServiceState } from '@/lib/format';
 import { ApiUnavailable } from '@/components/api-unavailable';
 import { IncidentList } from '@/components/incident-list';
+import { Panel } from '@/components/panel';
 import { ServiceCard } from '@/components/service-card';
-import { StatusBadge } from '@/components/status-badge';
+import { StatusBadge, statusColor } from '@/components/status-badge';
 
 // Peor estado observado entre todos los servicios: down > unstable > unknown > up.
 function overallState(states: ServiceState[]): ServiceState {
   if (states.some((state) => state === 'down')) return 'down';
   if (states.some((state) => state === 'unstable')) return 'unstable';
-  if (states.every((state) => state === 'unknown')) return 'unknown';
+  if (states.length > 0 && states.every((state) => state === 'unknown')) return 'unknown';
   return 'up';
 }
 
@@ -38,15 +39,35 @@ export default async function StatusPage() {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-lg border border-hairline bg-surface-1 p-6 text-center">
+      {/* Banner de estado global: el color se apoya siempre en el badge, que
+          trae icono y etiqueta. */}
+      <section
+        className="relative overflow-hidden rounded border border-hairline bg-surface-1 p-8 text-center"
+        style={{
+          background:
+            'radial-gradient(80% 120% at 50% 0%, color-mix(in srgb, var(--surface-2) 85%, transparent), var(--surface-1))',
+        }}
+      >
+        <span
+          aria-hidden
+          className="absolute inset-x-0 top-0 h-[2px]"
+          style={{ background: statusColor(overall) }}
+        />
         <div className="flex justify-center">
           <StatusBadge state={overall} />
         </div>
-        <p className="mt-2 text-sm text-text-secondary">{OVERALL_COPY[overall]}</p>
+        <p className="mt-3 text-lg font-medium text-text-primary">{OVERALL_COPY[overall]}</p>
+        <p className="mt-1 text-xs text-text-muted">
+          {overviews.length} servicios · ventana de 24 h
+        </p>
       </section>
 
       <section>
-        <h2 className="mb-3 text-sm font-medium text-text-primary">Servicios</h2>
+        <div className="rule-label mb-4">
+          <h2 className="text-sm font-medium text-text-primary">
+            <span className="text-accent">#</span> Servicios
+          </h2>
+        </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {overviews.map((overview) => (
             <ServiceCard key={overview.service.id} overview={overview} />
@@ -54,10 +75,9 @@ export default async function StatusPage() {
         </div>
       </section>
 
-      <section className="rounded-lg border border-hairline bg-surface-1 p-4">
-        <h2 className="mb-2 text-sm font-medium text-text-primary">Incidentes recientes</h2>
+      <Panel title="Incidentes recientes" meta={`${incidents.length} registrados`}>
         <IncidentList incidents={incidents} showServiceName />
-      </section>
+      </Panel>
     </div>
   );
 }

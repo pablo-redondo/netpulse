@@ -4,6 +4,7 @@ import { ApiUnavailable } from '@/components/api-unavailable';
 import { RangeFilter, parseRange } from '@/components/range-filter';
 import { ServiceCard } from '@/components/service-card';
 import { StatTile } from '@/components/stat-tile';
+import { StatusStrip } from '@/components/status-strip';
 
 const UNGROUPED = 'Sin grupo asignado';
 
@@ -43,27 +44,36 @@ export default async function DashboardPage(props: PageProps<'/'>) {
     latencies.length > 0 ? latencies.reduce((a, b) => a + b, 0) / latencies.length : null;
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-semibold text-text-primary">Estado de los servicios</h1>
-          <p className="mt-1 text-sm text-text-secondary">
-            {overviews.length} servicios públicos monitorizados por HTTP, DNS y TCP.
-          </p>
+    <div className="space-y-10">
+      {/* Hero: la cifra que lidera la vista, con el filtro que la escopa al lado */}
+      <section className="relative overflow-hidden rounded border border-hairline bg-surface-1 p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <div className="text-[11px] tracking-widest text-text-muted uppercase">
+              Disponibilidad global
+            </div>
+            <div className="glow-soft mt-1 text-[56px] leading-none font-bold text-text-primary">
+              {formatUptime(globalUptime)}
+            </div>
+            <p className="mt-2 text-sm text-text-muted">
+              {totalChecks.toLocaleString('es-ES')} comprobaciones agregadas en la ventana
+              seleccionada
+            </p>
+          </div>
+          <RangeFilter basePath="/" hours={hours} />
         </div>
-        <RangeFilter basePath="/" hours={hours} />
-      </div>
 
-      {/* Hero: la unica cifra que lidera la vista */}
-      <section className="rounded-lg border border-hairline bg-surface-1 p-6">
-        <div className="text-sm text-text-secondary">Disponibilidad global</div>
-        <div className="mt-1 text-[56px] leading-none font-semibold text-text-primary">
-          {formatUptime(globalUptime)}
+        <div className="mt-6 border-t border-hairline pt-4">
+          <div className="mb-2 flex items-baseline justify-between gap-3">
+            <span className="text-[11px] tracking-widest text-text-muted uppercase">
+              Sondas activas
+            </span>
+            <span className="text-xs text-text-muted">
+              {overviews.length} servicios públicos
+            </span>
+          </div>
+          <StatusStrip overviews={overviews} />
         </div>
-        <p className="mt-2 text-sm text-text-muted">
-          Agregado de {totalChecks.toLocaleString('es-ES')} comprobaciones en la ventana
-          seleccionada.
-        </p>
       </section>
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -88,9 +98,11 @@ export default async function DashboardPage(props: PageProps<'/'>) {
         const { label, cidr } = splitVlanGroup(group);
         return (
           <section key={group}>
-            <div className="mb-3 flex items-baseline gap-2">
-              <h2 className="text-sm font-medium text-text-primary">{label}</h2>
-              {cidr && <span className="font-mono text-xs text-text-muted">{cidr}</span>}
+            <div className="rule-label mb-4">
+              <h2 className="text-sm font-medium text-text-primary">
+                <span className="text-accent">#</span> {label}
+              </h2>
+              {cidr && <span className="text-xs text-text-muted">{cidr}</span>}
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {services.map((overview) => (

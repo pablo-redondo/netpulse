@@ -15,9 +15,11 @@ import { ChecksTable } from '@/components/checks-table';
 import { HistoryTable } from '@/components/history-table';
 import { IncidentList } from '@/components/incident-list';
 import { LatencyChart } from '@/components/latency-chart';
+import { Panel } from '@/components/panel';
 import { RangeFilter, parseRange } from '@/components/range-filter';
+import { Sparkline } from '@/components/sparkline';
 import { StatTile } from '@/components/stat-tile';
-import { StatusBadge, statusLabel } from '@/components/status-badge';
+import { StatusBadge, statusColor, statusLabel } from '@/components/status-badge';
 
 export default async function ServiceDetailPage(props: PageProps<'/services/[id]'>) {
   const { id } = await props.params;
@@ -51,42 +53,57 @@ export default async function ServiceDetailPage(props: PageProps<'/services/[id]
 
   return (
     <div className="space-y-6">
-      <Link href="/" className="inline-block text-sm text-text-secondary hover:text-text-primary">
-        ← Volver al dashboard
+      <Link
+        href="/"
+        className="inline-block text-xs text-text-muted transition-colors hover:text-text-secondary"
+      >
+        ← volver al dashboard
       </Link>
 
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl font-semibold text-text-primary">{service.name}</h1>
-            <span className="rounded border border-hairline px-1.5 py-0.5 text-[11px] font-medium text-text-secondary">
-              {service.type}
-            </span>
+      {/* Cabecera del servicio, con el filo de estado a la izquierda */}
+      <div className="relative overflow-hidden rounded border border-hairline bg-surface-1 p-5">
+        <span
+          aria-hidden
+          className="absolute inset-y-0 left-0 w-[3px]"
+          style={{ background: statusColor(state) }}
+        />
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="text-xl font-semibold text-text-primary">{service.name}</h1>
+              <span className="rounded border border-hairline px-1.5 py-0.5 text-[10px] font-medium tracking-widest text-text-muted">
+                {service.type}
+              </span>
+            </div>
+            <p className="mt-1 truncate text-sm text-text-muted">
+              <span className="text-accent">›</span> {service.target}
+            </p>
+            {service.expectedContent && (
+              <p className="mt-1 text-xs text-text-muted">
+                Verifica que la respuesta contiene:{' '}
+                <span className="text-text-secondary">
+                  &quot;{service.expectedContent}&quot;
+                </span>
+              </p>
+            )}
           </div>
-          <p className="mt-1 font-mono text-sm text-text-muted">{service.target}</p>
-        </div>
-        <div className="flex items-center gap-3">
           <RangeFilter basePath={`/services/${service.id}`} hours={hours} />
-          <a
-            href={`/services/${service.id}/export?hours=${hours}`}
-            className="rounded-md border border-hairline px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary"
-          >
-            Exportar CSV
-          </a>
         </div>
       </div>
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-lg border border-hairline bg-surface-1 p-4">
-          <div className="text-sm text-text-secondary">Estado actual</div>
+        <div className="rounded border border-hairline bg-surface-1 p-4">
+          <div className="text-[11px] tracking-widest text-text-muted uppercase">
+            Estado actual
+          </div>
           <div className="mt-2">
             <StatusBadge state={state} />
           </div>
-          <div className="mt-1 text-xs text-text-muted">
+          <div className="mt-1.5 text-xs text-text-muted">
             {latest ? formatRelative(latest.timestamp) : 'sin comprobaciones'}
           </div>
           {latest?.details && (
-            <div className="mt-1 truncate font-mono text-xs text-text-secondary">
+            <div className="mt-1 truncate text-xs text-text-secondary" title={latest.details}>
               {latest.details}
             </div>
           )}
@@ -100,6 +117,12 @@ export default async function ServiceDetailPage(props: PageProps<'/services/[id]
           label="Latencia media"
           value={formatLatency(avgLatency)}
           hint="Media de las medias horarias"
+          trend={
+            <Sparkline
+              values={history.map((stat) => stat.avgLatencyMs)}
+              label={`Latencia de ${service.name}`}
+            />
+          }
         />
         <StatTile
           label="Última latencia"
@@ -112,10 +135,19 @@ export default async function ServiceDetailPage(props: PageProps<'/services/[id]
       <HistoryTable stats={history} />
       <ChecksTable checks={checks} />
 
-      <section className="rounded-lg border border-hairline bg-surface-1 p-4">
-        <h2 className="mb-2 text-sm font-medium text-text-primary">Incidentes recientes</h2>
+      <Panel
+        title="Incidentes recientes"
+        meta={
+          <a
+            href={`/services/${service.id}/export?hours=${hours}`}
+            className="text-text-muted transition-colors hover:text-accent"
+          >
+            ↓ exportar CSV
+          </a>
+        }
+      >
         <IncidentList incidents={incidents} />
-      </section>
+      </Panel>
     </div>
   );
 }

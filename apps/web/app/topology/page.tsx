@@ -1,6 +1,7 @@
 import { ApiUnavailableError, getDashboard, type ServiceOverview } from '@/lib/api';
 import { stateOf } from '@/lib/format';
 import { ApiUnavailable } from '@/components/api-unavailable';
+import { Panel } from '@/components/panel';
 import { StatusBadge } from '@/components/status-badge';
 import { TopologyDiagram } from '@/components/topology-diagram';
 
@@ -13,19 +14,30 @@ export default async function TopologyPage() {
     throw error;
   }
 
+  const down = overviews.filter(
+    (o) => stateOf(o.latest, o.uptime.uptimePercent) === 'down',
+  ).length;
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-semibold text-text-primary">Topología</h1>
-        <p className="mt-1 text-sm text-text-secondary">
+        <h1 className="text-xl font-semibold text-text-primary">
+          <span className="text-accent">#</span> Topología
+        </h1>
+        <p className="mt-1 text-sm text-text-muted">
           Agrupación conceptual de los servicios monitorizados en segmentos de red.
         </p>
       </div>
 
       {/* El aviso va antes del diagrama, no como nota al pie: quien llega aqui
           debe saber que esta viendo antes de interpretarlo. */}
-      <div className="rounded-lg border border-hairline bg-surface-1 p-4">
-        <h2 className="text-sm font-semibold text-text-primary">
+      <div className="rounded border border-hairline bg-surface-1 p-4">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+          <span
+            aria-hidden
+            className="inline-block h-1.5 w-1.5 rounded-full"
+            style={{ background: 'var(--status-warning)' }}
+          />
           Esta vista es ilustrativa, no un descubrimiento de red
         </h2>
         <p className="mt-2 max-w-prose text-sm text-text-secondary">
@@ -38,26 +50,25 @@ export default async function TopologyPage() {
         <p className="mt-2 max-w-prose text-sm text-text-secondary">
           Lo único real en el diagrama es el{' '}
           <strong className="font-medium text-text-primary">estado de cada servicio</strong>,
-          que sí procede de las comprobaciones HTTP, DNS y TCP efectivamente realizadas.
+          que sí procede de las comprobaciones HTTP, DNS, TCP, TLS y NTP efectivamente
+          realizadas.
         </p>
       </div>
 
       <TopologyDiagram overviews={overviews} />
 
-      <div className="rounded-lg border border-hairline bg-surface-1 p-4">
-        <h2 className="text-sm font-medium text-text-primary">Leyenda</h2>
-        <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2">
+      <Panel title="Leyenda">
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
           <StatusBadge state="up" />
           <StatusBadge state="unstable" />
           <StatusBadge state="down" />
           <StatusBadge state="unknown" />
         </div>
         <p className="mt-3 text-xs text-text-muted">
-          Cada segmento toma el peor estado de los servicios que contiene.{' '}
-          {overviews.filter((o) => stateOf(o.latest, o.uptime.uptimePercent) === 'down').length}{' '}
-          de {overviews.length} servicios están caídos ahora mismo.
+          Cada segmento toma el peor estado de los servicios que contiene. {down} de{' '}
+          {overviews.length} servicios están caídos ahora mismo.
         </p>
-      </div>
+      </Panel>
     </div>
   );
 }

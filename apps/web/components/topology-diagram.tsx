@@ -2,8 +2,8 @@ import type { ServiceOverview } from '@/lib/api';
 import { splitVlanGroup, stateOf, type ServiceState } from '@/lib/format';
 
 const CANVAS_WIDTH = 920;
-const GATEWAY = { width: 200, height: 52, y: 24 };
-const GROUP = { width: 280, gap: 20, y: 150, headerHeight: 52, rowHeight: 34, padBottom: 14 };
+const GATEWAY = { width: 220, height: 58, y: 20 };
+const GROUP = { width: 280, gap: 20, y: 158, headerHeight: 56, rowHeight: 34, padBottom: 16 };
 
 const STATE_COLOR: Record<ServiceState, string> = {
   up: 'var(--status-good)',
@@ -70,6 +70,31 @@ function StateGlyph({ state, x, y }: { state: ServiceState; x: number; y: number
   );
 }
 
+/** Enlace con "halo": trazo ancho tenue debajo y trazo fino vivo encima. */
+function Link({ d, color }: { d: string; color: string }) {
+  return (
+    <g>
+      <path
+        d={d}
+        fill="none"
+        stroke={color}
+        strokeWidth={6}
+        strokeOpacity={0.12}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d={d}
+        fill="none"
+        stroke={color}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </g>
+  );
+}
+
 export function TopologyDiagram({ overviews }: { overviews: ServiceOverview[] }) {
   const groups = new Map<string, ServiceOverview[]>();
   for (const overview of overviews) {
@@ -88,24 +113,25 @@ export function TopologyDiagram({ overviews }: { overviews: ServiceOverview[] })
 
   const gatewayX = (CANVAS_WIDTH - GATEWAY.width) / 2;
   const gatewayBottom = GATEWAY.y + GATEWAY.height;
+  const midY = (gatewayBottom + GROUP.y) / 2;
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-hairline bg-surface-1 p-4">
+    <div className="overflow-x-auto rounded border border-hairline bg-surface-1 p-4">
       <svg
         viewBox={`0 0 ${CANVAS_WIDTH} ${canvasHeight}`}
         width={CANVAS_WIDTH}
         height={canvasHeight}
-        className="h-auto max-w-full min-w-[720px]"
+        className="h-auto max-w-full min-w-[760px]"
         role="img"
         aria-label="Diagrama conceptual de segmentación en VLAN. Un router central conecta los grupos de servicios monitorizados. Los datos de cada servicio están en el dashboard."
       >
         {/* Tronco del router en neutro: es compartido por todos los grupos, asi
             que no puede llevar el color de estado de ninguno en concreto. */}
         <path
-          d={`M${CANVAS_WIDTH / 2},${gatewayBottom} L${CANVAS_WIDTH / 2},${(gatewayBottom + GROUP.y) / 2}`}
+          d={`M${CANVAS_WIDTH / 2},${gatewayBottom} L${CANVAS_WIDTH / 2},${midY}`}
           fill="none"
           stroke="var(--axis)"
-          strokeWidth={2}
+          strokeWidth={1.5}
           strokeLinecap="round"
         />
 
@@ -117,34 +143,41 @@ export function TopologyDiagram({ overviews }: { overviews: ServiceOverview[] })
           const state = aggregateState(
             services.map((s) => stateOf(s.latest, s.uptime.uptimePercent)),
           );
-          const midY = (gatewayBottom + GROUP.y) / 2;
           return (
-            <path
+            <Link
               key={`link-${group}`}
               d={`M${CANVAS_WIDTH / 2},${midY} L${boxCenterX},${midY} L${boxCenterX},${GROUP.y}`}
-              fill="none"
-              stroke={STATE_COLOR[state]}
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
+              color={STATE_COLOR[state]}
             />
           );
         })}
 
-        {/* Router / gateway ilustrativo */}
+        {/* Router / gateway ilustrativo, con "LEDs" de panel frontal */}
         <rect
           x={gatewayX}
           y={GATEWAY.y}
           width={GATEWAY.width}
           height={GATEWAY.height}
-          rx={8}
-          fill="var(--surface-1)"
-          stroke="var(--axis)"
+          rx={4}
+          fill="var(--surface-2)"
+          stroke="var(--border-strong)"
           strokeWidth={1}
         />
+        {[0, 1, 2, 3].map((i) => (
+          <rect
+            key={i}
+            x={gatewayX + 12 + i * 7}
+            y={GATEWAY.y + 10}
+            width={4}
+            height={4}
+            rx={1}
+            fill="var(--status-good)"
+            opacity={i === 3 ? 0.35 : 0.9}
+          />
+        ))}
         <text
           x={CANVAS_WIDTH / 2}
-          y={GATEWAY.y + 22}
+          y={GATEWAY.y + 30}
           textAnchor="middle"
           fontSize={13}
           fontWeight={600}
@@ -154,7 +187,7 @@ export function TopologyDiagram({ overviews }: { overviews: ServiceOverview[] })
         </text>
         <text
           x={CANVAS_WIDTH / 2}
-          y={GATEWAY.y + 39}
+          y={GATEWAY.y + 47}
           textAnchor="middle"
           fontSize={11}
           fill="var(--text-muted)"
@@ -176,47 +209,72 @@ export function TopologyDiagram({ overviews }: { overviews: ServiceOverview[] })
                 y={GROUP.y}
                 width={GROUP.width}
                 height={groupHeight}
-                rx={8}
+                rx={4}
                 fill="var(--surface-1)"
-                stroke="var(--axis)"
+                stroke="var(--border)"
                 strokeWidth={1}
               />
-              <StateGlyph state={state} x={boxX + 20} y={GROUP.y + 22} />
+              {/* Cabecera del segmento, con su propia banda */}
+              <rect
+                x={boxX}
+                y={GROUP.y}
+                width={GROUP.width}
+                height={GROUP.headerHeight - 6}
+                fill="var(--surface-2)"
+              />
+              {/* Filo de estado del segmento */}
+              <rect
+                x={boxX}
+                y={GROUP.y}
+                width={2}
+                height={groupHeight}
+                fill={STATE_COLOR[state]}
+              />
+              <StateGlyph state={state} x={boxX + 22} y={GROUP.y + 22} />
               <text
-                x={boxX + 34}
+                x={boxX + 36}
                 y={GROUP.y + 26}
                 fontSize={12}
                 fontWeight={600}
                 fill="var(--text-primary)"
               >
-                {truncate(label, 28)}
+                {truncate(label, 26)}
               </text>
               {cidr && (
-                <text x={boxX + 34} y={GROUP.y + 42} fontSize={11} fill="var(--text-muted)">
+                <text x={boxX + 36} y={GROUP.y + 42} fontSize={11} fill="var(--text-muted)">
                   {cidr}
                 </text>
               )}
               <line
                 x1={boxX}
-                y1={GROUP.y + GROUP.headerHeight - 4}
+                y1={GROUP.y + GROUP.headerHeight - 6}
                 x2={boxX + GROUP.width}
-                y2={GROUP.y + GROUP.headerHeight - 4}
-                stroke="var(--gridline)"
+                y2={GROUP.y + GROUP.headerHeight - 6}
+                stroke="var(--border)"
                 strokeWidth={1}
               />
 
               {services.map((overview, rowIndex) => {
-                const rowY = GROUP.y + GROUP.headerHeight + rowIndex * GROUP.rowHeight + 14;
+                const rowY = GROUP.y + GROUP.headerHeight + rowIndex * GROUP.rowHeight + 12;
                 const rowState = stateOf(overview.latest, overview.uptime.uptimePercent);
                 return (
                   <g key={overview.service.id}>
                     <title>{`${overview.service.name} — ${overview.service.target}`}</title>
-                    <StateGlyph state={rowState} x={boxX + 20} y={rowY} />
-                    <text x={boxX + 34} y={rowY + 4} fontSize={12} fill="var(--text-secondary)">
-                      {truncate(overview.service.name, 26)}
+                    {/* Marca de "puerto" del segmento al servicio */}
+                    <line
+                      x1={boxX + 2}
+                      y1={rowY}
+                      x2={boxX + 12}
+                      y2={rowY}
+                      stroke="var(--axis)"
+                      strokeWidth={1}
+                    />
+                    <StateGlyph state={rowState} x={boxX + 22} y={rowY} />
+                    <text x={boxX + 36} y={rowY + 4} fontSize={12} fill="var(--text-secondary)">
+                      {truncate(overview.service.name, 24)}
                     </text>
                     <text
-                      x={boxX + GROUP.width - 14}
+                      x={boxX + GROUP.width - 12}
                       y={rowY + 4}
                       textAnchor="end"
                       fontSize={10}
