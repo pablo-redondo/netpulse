@@ -7,6 +7,7 @@ import { ServicesModule } from './services/services.module';
 import { HistoryModule } from './history/history.module';
 import { ScheduleModule } from './schedule/schedule.module';
 import { AdminModule } from './admin/admin.module';
+import { IncidentsModule } from './incidents/incidents.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { AdminModule } from './admin/admin.module';
     HistoryModule,
     ScheduleModule,
     AdminModule,
+    IncidentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,6 +1,7 @@
 import type {
   CheckResult,
   HourlyStat,
+  Incident,
   MonitoredService,
   UptimeSummary,
 } from '@netpulse/shared-types';
@@ -64,6 +65,14 @@ export function getHistory(id: string, hours = 24): Promise<HourlyStat[]> {
 
 export function getRecentChecks(id: string, limit = 20): Promise<CheckResult[]> {
   return getJson<CheckResult[]>(`/services/${id}/checks?limit=${limit}`);
+}
+
+export function getServiceIncidents(id: string, limit = 20): Promise<Incident[]> {
+  return getJson<Incident[]>(`/services/${id}/incidents?limit=${limit}`);
+}
+
+export function getRecentIncidents(limit = 20): Promise<Incident[]> {
+  return getJson<Incident[]>(`/incidents/recent?limit=${limit}`);
 }
 
 export interface ServiceOverview {

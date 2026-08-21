@@ -3,6 +3,7 @@ import type { CheckType, MonitoredService } from '#prisma/client';
 import { HttpCheckStrategy } from './strategies/http-check.strategy';
 import { DnsCheckStrategy } from './strategies/dns-check.strategy';
 import { TcpCheckStrategy } from './strategies/tcp-check.strategy';
+import { TlsCheckStrategy } from './strategies/tls-check.strategy';
 import type { CheckOutcome, CheckStrategy } from './checks.interface';
 
 @Injectable()
@@ -13,16 +14,18 @@ export class ChecksService {
     httpCheckStrategy: HttpCheckStrategy,
     dnsCheckStrategy: DnsCheckStrategy,
     tcpCheckStrategy: TcpCheckStrategy,
+    tlsCheckStrategy: TlsCheckStrategy,
   ) {
     this.strategies = new Map<CheckType, CheckStrategy>([
       [httpCheckStrategy.type, httpCheckStrategy],
       [dnsCheckStrategy.type, dnsCheckStrategy],
       [tcpCheckStrategy.type, tcpCheckStrategy],
+      [tlsCheckStrategy.type, tlsCheckStrategy],
     ]);
   }
 
   async execute(
-    service: Pick<MonitoredService, 'type' | 'target'>,
+    service: Pick<MonitoredService, 'type' | 'target' | 'expectedContent'>,
   ): Promise<CheckOutcome> {
     const strategy = this.strategies.get(service.type);
     if (!strategy) {
@@ -35,7 +38,7 @@ export class ChecksService {
     }
 
     try {
-      return await strategy.run(service.target);
+      return await strategy.run(service.target, service);
     } catch (error) {
       return {
         success: false,

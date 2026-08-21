@@ -1,7 +1,9 @@
 import { HttpCheckStrategy } from './http-check.strategy';
 
-function mockFetchResolvedWith(status: number): jest.Mock {
-  return jest.fn().mockResolvedValue({ status });
+function mockFetchResolvedWith(status: number, body = ''): jest.Mock {
+  return jest
+    .fn()
+    .mockResolvedValue({ status, text: () => Promise.resolve(body) });
 }
 
 describe('HttpCheckStrategy', () => {
@@ -84,6 +86,40 @@ describe('HttpCheckStrategy', () => {
         headers: { 'User-Agent': 'NetPulse-Monitor/1.0 (portfolio project)' },
       }),
     );
+  });
+
+  it('con expectedContent, da por bueno un 200 que contiene el texto', async () => {
+    global.fetch = mockFetchResolvedWith(
+      200,
+      '<html>Bienvenido a Wikipedia</html>',
+    );
+
+    const outcome = await strategy.run('https://wikipedia.org', {
+      expectedContent: 'Wikipedia',
+    });
+
+    expect(outcome.success).toBe(true);
+  });
+
+  it('con expectedContent, da por malo un 200 que no lo contiene', async () => {
+    global.fetch = mockFetchResolvedWith(200, '<html>Otra cosa</html>');
+
+    const outcome = await strategy.run('https://wikipedia.org', {
+      expectedContent: 'Wikipedia',
+    });
+
+    expect(outcome.success).toBe(false);
+    expect(outcome.statusCode).toBe(200);
+    expect(outcome.errorMessage).toMatch(/contenido esperado/i);
+  });
+
+  it('sin expectedContent, no lee el body de la respuesta', async () => {
+    const textMock = jest.fn().mockResolvedValue('');
+    global.fetch = jest.fn().mockResolvedValue({ status: 200, text: textMock });
+
+    await strategy.run('https://github.com');
+
+    expect(textMock).not.toHaveBeenCalled();
   });
 
   it('aborta y devuelve fallo si el servidor no responde a tiempo', async () => {

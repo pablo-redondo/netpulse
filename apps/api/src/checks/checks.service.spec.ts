@@ -4,6 +4,7 @@ import type { CheckOutcome, CheckStrategy } from './checks.interface';
 import type { HttpCheckStrategy } from './strategies/http-check.strategy';
 import type { DnsCheckStrategy } from './strategies/dns-check.strategy';
 import type { TcpCheckStrategy } from './strategies/tcp-check.strategy';
+import type { TlsCheckStrategy } from './strategies/tls-check.strategy';
 
 const OK: CheckOutcome = {
   success: true,
@@ -26,14 +27,20 @@ describe('ChecksService', () => {
       fakeStrategy(CheckType.HTTP, httpRun) as unknown as HttpCheckStrategy,
       fakeStrategy(CheckType.DNS) as unknown as DnsCheckStrategy,
       fakeStrategy(CheckType.TCP) as unknown as TcpCheckStrategy,
+      fakeStrategy(CheckType.TLS) as unknown as TlsCheckStrategy,
     );
 
-    const outcome = await service.execute({
+    const monitoredService = {
       type: CheckType.HTTP,
       target: 'https://github.com',
-    });
+      expectedContent: null,
+    };
+    const outcome = await service.execute(monitoredService);
 
-    expect(httpRun).toHaveBeenCalledWith('https://github.com');
+    expect(httpRun).toHaveBeenCalledWith(
+      'https://github.com',
+      monitoredService,
+    );
     expect(outcome).toBe(OK);
   });
 
@@ -43,14 +50,17 @@ describe('ChecksService', () => {
       fakeStrategy(CheckType.HTTP) as unknown as HttpCheckStrategy,
       fakeStrategy(CheckType.DNS, dnsRun) as unknown as DnsCheckStrategy,
       fakeStrategy(CheckType.TCP) as unknown as TcpCheckStrategy,
+      fakeStrategy(CheckType.TLS) as unknown as TlsCheckStrategy,
     );
 
-    await service.execute({
+    const monitoredService = {
       type: CheckType.DNS,
       target: 'github.com@1.1.1.1',
-    });
+      expectedContent: null,
+    };
+    await service.execute(monitoredService);
 
-    expect(dnsRun).toHaveBeenCalledWith('github.com@1.1.1.1');
+    expect(dnsRun).toHaveBeenCalledWith('github.com@1.1.1.1', monitoredService);
   });
 
   it('elige la estrategia TCP para un servicio de tipo TCP', async () => {
@@ -59,11 +69,36 @@ describe('ChecksService', () => {
       fakeStrategy(CheckType.HTTP) as unknown as HttpCheckStrategy,
       fakeStrategy(CheckType.DNS) as unknown as DnsCheckStrategy,
       fakeStrategy(CheckType.TCP, tcpRun) as unknown as TcpCheckStrategy,
+      fakeStrategy(CheckType.TLS) as unknown as TlsCheckStrategy,
     );
 
-    await service.execute({ type: CheckType.TCP, target: 'github.com:443' });
+    const monitoredService = {
+      type: CheckType.TCP,
+      target: 'github.com:443',
+      expectedContent: null,
+    };
+    await service.execute(monitoredService);
 
-    expect(tcpRun).toHaveBeenCalledWith('github.com:443');
+    expect(tcpRun).toHaveBeenCalledWith('github.com:443', monitoredService);
+  });
+
+  it('elige la estrategia TLS para un servicio de tipo TLS', async () => {
+    const tlsRun = jest.fn().mockResolvedValue(OK);
+    const service = new ChecksService(
+      fakeStrategy(CheckType.HTTP) as unknown as HttpCheckStrategy,
+      fakeStrategy(CheckType.DNS) as unknown as DnsCheckStrategy,
+      fakeStrategy(CheckType.TCP) as unknown as TcpCheckStrategy,
+      fakeStrategy(CheckType.TLS, tlsRun) as unknown as TlsCheckStrategy,
+    );
+
+    const monitoredService = {
+      type: CheckType.TLS,
+      target: 'github.com',
+      expectedContent: null,
+    };
+    await service.execute(monitoredService);
+
+    expect(tlsRun).toHaveBeenCalledWith('github.com', monitoredService);
   });
 
   it('convierte un rechazo de la estrategia en un CheckOutcome de fallo, sin propagar la excepcion', async () => {
@@ -74,11 +109,13 @@ describe('ChecksService', () => {
       ) as unknown as HttpCheckStrategy,
       fakeStrategy(CheckType.DNS) as unknown as DnsCheckStrategy,
       fakeStrategy(CheckType.TCP) as unknown as TcpCheckStrategy,
+      fakeStrategy(CheckType.TLS) as unknown as TlsCheckStrategy,
     );
 
     const outcome = await service.execute({
       type: CheckType.HTTP,
       target: 'https://example.com',
+      expectedContent: null,
     });
 
     expect(outcome).toEqual({
@@ -97,11 +134,13 @@ describe('ChecksService', () => {
       ) as unknown as HttpCheckStrategy,
       fakeStrategy(CheckType.DNS) as unknown as DnsCheckStrategy,
       fakeStrategy(CheckType.TCP) as unknown as TcpCheckStrategy,
+      fakeStrategy(CheckType.TLS) as unknown as TlsCheckStrategy,
     );
 
     const outcome = await service.execute({
       type: CheckType.HTTP,
       target: 'https://example.com',
+      expectedContent: null,
     });
 
     expect(outcome.success).toBe(false);

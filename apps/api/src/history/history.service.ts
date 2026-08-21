@@ -19,7 +19,11 @@ function startOfHour(date: Date): Date {
 }
 
 function toCheckResultDto(result: CheckResultEntity): CheckResult {
-  return { ...result, timestamp: result.timestamp.toISOString() };
+  return {
+    ...result,
+    timestamp: result.timestamp.toISOString(),
+    certExpiresAt: result.certExpiresAt?.toISOString() ?? null,
+  };
 }
 
 function toHourlyStatDto(stat: HourlyStatEntity): HourlyStat {
@@ -41,6 +45,7 @@ export class HistoryService {
           latencyMs: outcome.latencyMs,
           statusCode: outcome.statusCode,
           errorMessage: outcome.errorMessage,
+          certExpiresAt: outcome.certExpiresAt ?? null,
         },
       });
 

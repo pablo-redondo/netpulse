@@ -5,6 +5,7 @@ import {
   getHistory,
   getRecentChecks,
   getService,
+  getServiceIncidents,
   getStatus,
   getUptime,
 } from '@/lib/api';
@@ -12,6 +13,7 @@ import { formatLatency, formatRelative, formatUptime, stateOf } from '@/lib/form
 import { ApiUnavailable } from '@/components/api-unavailable';
 import { ChecksTable } from '@/components/checks-table';
 import { HistoryTable } from '@/components/history-table';
+import { IncidentList } from '@/components/incident-list';
 import { LatencyChart } from '@/components/latency-chart';
 import { RangeFilter, parseRange } from '@/components/range-filter';
 import { StatTile } from '@/components/stat-tile';
@@ -25,19 +27,20 @@ export default async function ServiceDetailPage(props: PageProps<'/services/[id]
   let data;
   try {
     const service = await getService(id);
-    const [latest, uptime, history, checks] = await Promise.all([
+    const [latest, uptime, history, checks, incidents] = await Promise.all([
       getStatus(id),
       getUptime(id, hours),
       getHistory(id, hours),
       getRecentChecks(id, 20),
+      getServiceIncidents(id, 10),
     ]);
-    data = { service, latest, uptime, history, checks };
+    data = { service, latest, uptime, history, checks, incidents };
   } catch (error) {
     if (error instanceof ApiUnavailableError) return <ApiUnavailable />;
     notFound();
   }
 
-  const { service, latest, uptime, history, checks } = data;
+  const { service, latest, uptime, history, checks, incidents } = data;
   const state = stateOf(latest, uptime.uptimePercent);
 
   const latencies = history
@@ -62,7 +65,15 @@ export default async function ServiceDetailPage(props: PageProps<'/services/[id]
           </div>
           <p className="mt-1 font-mono text-sm text-text-muted">{service.target}</p>
         </div>
-        <RangeFilter basePath={`/services/${service.id}`} hours={hours} />
+        <div className="flex items-center gap-3">
+          <RangeFilter basePath={`/services/${service.id}`} hours={hours} />
+          <a
+            href={`/services/${service.id}/export?hours=${hours}`}
+            className="rounded-md border border-hairline px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary"
+          >
+            Exportar CSV
+          </a>
+        </div>
       </div>
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -95,6 +106,11 @@ export default async function ServiceDetailPage(props: PageProps<'/services/[id]
       <LatencyChart stats={history} hours={hours} />
       <HistoryTable stats={history} />
       <ChecksTable checks={checks} />
+
+      <section className="rounded-lg border border-hairline bg-surface-1 p-4">
+        <h2 className="mb-2 text-sm font-medium text-text-primary">Incidentes recientes</h2>
+        <IncidentList incidents={incidents} />
+      </section>
     </div>
   );
 }

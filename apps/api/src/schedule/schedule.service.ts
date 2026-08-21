@@ -4,6 +4,7 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import { ChecksService } from '../checks/checks.service';
 import { HistoryService } from '../history/history.service';
 import { ServicesService } from '../services/services.service';
+import { IncidentsService } from '../incidents/incidents.service';
 
 const CHECK_INTERVAL_NAME = 'monitored-services-check';
 const DEFAULT_INTERVAL_MS = 300_000;
@@ -18,6 +19,7 @@ export class ScheduleService implements OnModuleInit {
     private readonly servicesService: ServicesService,
     private readonly checksService: ChecksService,
     private readonly historyService: HistoryService,
+    private readonly incidentsService: IncidentsService,
   ) {}
 
   onModuleInit() {
@@ -38,6 +40,7 @@ export class ScheduleService implements OnModuleInit {
       services.map(async (service) => {
         const outcome = await this.checksService.execute(service);
         await this.historyService.record(service.id, outcome);
+        await this.incidentsService.recordOutcome(service, outcome);
         return outcome;
       }),
     );

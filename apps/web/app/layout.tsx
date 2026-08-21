@@ -38,6 +38,9 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
                 <Link href="/topology" className="text-text-secondary hover:text-text-primary">
                   Topología
                 </Link>
+                <Link href="/status" className="text-text-secondary hover:text-text-primary">
+                  Estado público
+                </Link>
               </nav>
             </div>
             <ThemeToggle />

@@ -14,26 +14,27 @@ El diseño completo, con las decisiones y por qué se tomaron, está en
 
 ## Qué monitoriza
 
-Son diez servicios públicos, elegidos para cubrir los tres tipos de
+Son diecinueve servicios públicos, elegidos para cubrir los cuatro tipos de
 comprobación. Ninguno es infraestructura mía: son sitios que ya reciben tráfico
-de medio mundo.
+de medio mundo. El catálogo completo vive en un único sitio,
+[`apps/api/src/admin/seed-data.ts`](./apps/api/src/admin/seed-data.ts), del
+que tiran tanto el seed de desarrollo como el de producción.
 
-| Servicio | Check | Qué hace exactamente |
+| Servicio (ejemplos) | Check | Qué hace exactamente |
 |---|---|---|
-| GitHub | HTTP | GET a `https://github.com`, mide el tiempo hasta la respuesta |
-| Google | HTTP | GET a `https://google.com` |
-| Cloudflare | HTTP | GET a `https://cloudflare.com` |
-| GitHub API | HTTP | GET a `https://api.github.com` |
-| Cloudflare DNS | DNS | Resuelve `github.com` preguntándole a 1.1.1.1 |
-| Google DNS | DNS | Resuelve `google.com` preguntándole a 8.8.8.8 |
-| Quad9 DNS | DNS | Resuelve `cloudflare.com` preguntándole a 9.9.9.9 |
-| GitHub TCP:443 | TCP | Abre un socket al 443 y lo cierra, sin hablar HTTP |
-| Cloudflare DNS TCP:53 | TCP | Socket al puerto 53, que también escucha en TCP y no solo en UDP |
-| Gmail SMTP TCP:587 | TCP | Socket al puerto de submission de correo |
+| GitHub, Google, Cloudflare, GitHub API | HTTP | GET a la URL, mide el tiempo hasta la respuesta |
+| Wikipedia, DuckDuckGo | HTTP + contenido | Además del código, comprueba que el body contiene un texto concreto |
+| Cloudflare / Google / GitHub DNS | DNS | Resuelve un hostname preguntándole a un resolver público distinto |
+| GitHub TCP:443, Gmail SMTP TCP:587... | TCP | Abre un socket al puerto y lo cierra, sin hablar el protocolo de aplicación |
+| Cloudflare / GitHub / Google / Docker Hub TLS | TLS | Abre un handshake TLS y mira cuántos días le quedan al certificado |
 
-Un check HTTP se da por bueno si el código es menor que 400. Los de DNS y TCP
-no tienen código de estado: cuentan como correctos si la resolución devuelve al
-menos una dirección o si el socket llega a conectar.
+Un check HTTP se da por bueno si el código es menor que 400 y, si el servicio
+tiene `expectedContent` configurado, si además el body contiene ese texto —útil
+para detectar una web que responde 200 pero sirve una página de error o un
+placeholder. Los de DNS y TCP no tienen código de estado: cuentan como
+correctos si la resolución devuelve al menos una dirección o si el socket
+llega a conectar. El de TLS falla si el certificado ya caducó o si le quedan
+menos de 14 días, para poder avisar antes de que caduque de verdad.
 
 Las peticiones HTTP van con un `User-Agent` identificable
 (`NetPulse-Monitor/1.0 (portfolio project)`), para que cualquiera que mire sus
@@ -70,6 +71,27 @@ establecimiento de conexión y no solo el ida y vuelta de la capa de red.
 
 Dicho de otro modo: se pierde el ICMP puro, pero se gana algo que funciona
 siempre y que mide algo más útil.
+
+El check TLS nació de la misma lógica: es otra comprobación "de red" que no
+necesita privilegios especiales —`tls.connect` es API estándar de Node— y que
+además resuelve un problema real y muy típico en ASIR, el del certificado que
+caduca un fin de semana y nadie se entera hasta que un usuario se lo encuentra.
+
+## Incidentes y alertas
+
+Cada comprobación fallida no genera ruido por sí sola: lo que importa es el
+tramo continuo de caída, no cada intento individual. `IncidentsService` abre
+un incidente en el primer fallo tras un tramo sano y lo cierra en el primer
+éxito tras uno caído; los fallos repetidos mientras el incidente sigue abierto
+no crean nada nuevo. Cada servicio tiene su propio histórico de incidentes
+(`GET /services/:id/incidents`), y hay un feed global con los más recientes de
+todos (`GET /incidents/recent`), que es lo que alimenta la página de estado
+pública.
+
+Si se configura `ALERT_WEBHOOK_URL` (un webhook entrante de Discord o Slack),
+`NotificationsService` manda un aviso al abrir y al resolver cada incidente.
+Sin esa variable, no pasa nada: es una función opcional, pensada para no ser
+un requisito para que el resto de NetPulse funcione.
 
 ## La vista de topología es ilustrativa
 
@@ -122,7 +144,7 @@ llamadas desde el navegador, así que tampoco hay CORS que configurar.
 
 ## El modelo de datos
 
-Hay tres tablas y la tercera es la interesante:
+Hay cuatro tablas, y las dos últimas son las interesantes:
 
 `MonitoredService` es cada cosa que se vigila. `CheckResult` es cada
 comprobación individual, con su timestamp, su latencia, si fue bien y el
@@ -146,6 +168,11 @@ hay una columna aparte, `latencyChecks`, que es la que se usa para promediar.
 concreto de cada fallo, y la pantalla de detalle la usa para listar las últimas
 comprobaciones. Simplemente no se consulta para nada que tenga que agregar
 mucho histórico.
+
+`Incident` es la cuarta tabla, y no la escribe nadie a mano: la mantiene
+`IncidentsService` a partir de las transiciones de estado de cada servicio
+(ver "Incidentes y alertas" más arriba). Un incidente sin `resolvedAt` es uno
+que sigue abierto ahora mismo.
 
 ## Ponerlo en marcha en local
 
@@ -192,6 +219,8 @@ En `apps/api`:
 | `DATABASE_URL` | — | Cadena de conexión a PostgreSQL. Obligatoria |
 | `PORT` | `3000` | Puerto del backend. El `.env.example` lo pone en `3001` para no chocar con Next |
 | `CHECK_INTERVAL_MS` | `300000` | Cada cuánto se lanza la ronda de comprobaciones |
+| `ALERT_WEBHOOK_URL` | — | Opcional. Webhook de Discord/Slack para avisos de caída/recuperación |
+| `SEED_SECRET` | — | Opcional en local. Protege `GET /admin/seed`; en Render lo genera el blueprint |
 
 En `apps/web`:
 
@@ -213,14 +242,31 @@ fuera y tampoco autenticación que proteger.
 | `GET /services/:id/uptime?hours=24` | Disponibilidad agregada de la ventana |
 | `GET /services/:id/history?hours=24` | Serie horaria para la gráfica |
 | `GET /services/:id/checks?limit=20` | Últimas comprobaciones en crudo, con errores |
+| `GET /services/:id/history.csv?hours=24` | El histórico horario, como CSV descargable |
+| `GET /services/:id/incidents?limit=20` | Incidentes (caídas) de ese servicio |
+| `GET /incidents/recent?limit=20` | Los incidentes más recientes de todos los servicios |
 
 `hours` admite hasta 720 (30 días) y `limit` hasta 100; por encima de eso se
 recorta. Si el id no existe, 404.
 
+Hay una excepción a "todo es de solo lectura": `GET /admin/seed?secret=...`,
+protegido por `SEED_SECRET`, que vuelve a sembrar el catálogo de servicios.
+Existe porque el plan free de Render no da acceso a Shell ni a Jobs, así que
+es la única forma de sembrar la base de datos de producción sin salir de la
+red interna de Render (ver "Despliegue" más abajo).
+
 ## Sobre el panel
 
-El panel tiene tres pantallas: el listado de servicios agrupados por segmento,
-el detalle de un servicio con su gráfica de latencia, y la topología.
+El panel tiene cuatro pantallas: el listado de servicios agrupados por
+segmento, el detalle de un servicio con su gráfica de latencia y sus
+incidentes, la topología, y una página de estado pública (`/status`) pensada
+para compartir sin dar acceso al resto del panel —solo el estado agregado, el
+listado de servicios y el feed de incidentes recientes.
+
+La pantalla de detalle tiene un botón "Exportar CSV" que descarga el
+histórico horario del rango seleccionado. Como la API no es pública (la URL
+del backend no se expone al navegador), lo sirve un route handler de Next.js
+que hace de proxy server-side.
 
 Un par de decisiones que quizá no se ven a simple vista. El estado nunca se
 comunica solo con color: cada uno lleva su icono y su etiqueta de texto, y en
@@ -273,10 +319,18 @@ así que no hace falta rellenar formularios a mano:
 2. El build ya se encarga de instalar, compilar `shared-types`, aplicar las
    migraciones de Prisma y compilar el backend, en ese orden. No hay que
    tocar nada más para que arranque.
-3. Sembrar los 10 servicios es cosa de una vez, y a mano: desde el shell del
-   servicio en el dashboard de Render,
-   `pnpm --filter @netpulse/api prisma:seed`. Como el seed hace upsert por
-   nombre, se puede volver a lanzar sin miedo si algún día hace falta.
+3. Sembrar el catálogo es cosa de una vez: visitar
+   `https://<tu-servicio>.onrender.com/admin/seed?secret=<SEED_SECRET>` en el
+   navegador. `SEED_SECRET` lo genera el propio blueprint —está en la pestaña
+   Environment del servicio en Render— y el endpoint hace upsert por nombre,
+   así que volver a llamarlo tras añadir servicios nuevos al catálogo es
+   seguro. No hace falta Shell ni Jobs, que en el plan free de Render son de
+   pago: por eso el sembrado va por un endpoint HTTP y no por un comando
+   suelto.
+
+4. Opcional: para recibir alertas de caídas y recuperaciones en Discord o
+   Slack, añadir `ALERT_WEBHOOK_URL` a mano en Environment con la URL del
+   webhook entrante. Sin esto, NetPulse funciona igual; simplemente no avisa.
 
 El plan `free` de Render dura lo justo para comprobar que todo esto funciona:
 el servicio se duerme a los 15 minutos sin tráfico HTTP —y con él, el
@@ -305,14 +359,10 @@ enseña un aviso en vez de un error pelado.
 
 ## Estado del proyecto
 
-Funciona de punta a punta en local: las comprobaciones se ejecutan, se
-guardan, se agregan y se pintan. El despliegue está preparado y probado —el
-build completo y las migraciones se han corrido de principio a fin contra una
-base de datos limpia, tal cual las ejecutaría Render— pero la instancia real
-en Render y Vercel la tiene que levantar quien clone esto, porque hace falta
-una cuenta en cada sitio.
+Desplegado y funcionando: backend en Render, frontend en Vercel, base de
+datos sembrada y el scheduler corriendo de verdad contra los servicios
+públicos del catálogo.
 
 Lo que falta:
 
-- Las capturas de pantalla de este README, en cuanto haya una instancia real
-  desplegada y unos días de datos reales encima.
+- Las capturas de pantalla de este README, con datos reales acumulados.

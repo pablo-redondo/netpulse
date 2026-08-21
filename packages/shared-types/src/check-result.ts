@@ -6,6 +6,17 @@ export interface CheckResult {
   latencyMs: number | null;
   statusCode: number | null;
   errorMessage: string | null;
+  /** Solo para TLS: fecha de expiración del certificado observado. */
+  certExpiresAt: string | null;
+}
+
+export interface Incident {
+  id: string;
+  serviceId: string;
+  serviceName: string;
+  startedAt: string;
+  resolvedAt: string | null;
+  cause: string | null;
 }
 
 export interface HourlyStat {

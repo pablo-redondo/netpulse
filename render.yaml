@@ -37,3 +37,9 @@ services:
         value: "300000"
       - key: SEED_SECRET
         generateValue: true
+      # Opcional: URL de un webhook de Discord/Slack para alertas de caidas
+      # y recuperaciones. Sin configurar, las notificaciones simplemente no
+      # se envian (ver NotificationsService). Se rellena a mano en el
+      # dashboard de Render, no aqui.
+      - key: ALERT_WEBHOOK_URL
+        sync: false

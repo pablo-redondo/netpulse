@@ -11,34 +11,55 @@ enum CheckType {
   HTTP
   DNS
   TCP
+  TLS
 }
 
 model MonitoredService {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  type        CheckType
-  target      String   // URL para HTTP, hostname para DNS, "host:port" para TCP
-  vlanGroup   String?  // agrupacion ilustrativa para la vista de topologia
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
+  id              String   @id @default(cuid())
+  name            String   @unique
+  type            CheckType
+  target          String   // URL para HTTP, hostname para DNS, "host:port" para TCP/TLS
+  vlanGroup       String?  // agrupacion ilustrativa para la vista de topologia
+  // Solo para HTTP: si esta presente, el check tambien falla si la respuesta
+  // no contiene este texto (verificacion de contenido, no solo de status).
+  expectedContent String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
 
   results     CheckResult[]
   hourlyStats HourlyStat[]
+  incidents   Incident[]
 
   @@index([isActive])
 }
 
 model CheckResult {
-  id           String           @id @default(cuid())
-  serviceId    String
-  service      MonitoredService @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  timestamp    DateTime         @default(now())
-  success      Boolean
-  latencyMs    Int?
-  statusCode   Int?             // solo relevante para HTTP
-  errorMessage String?
+  id            String           @id @default(cuid())
+  serviceId     String
+  service       MonitoredService @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  timestamp     DateTime         @default(now())
+  success       Boolean
+  latencyMs     Int?
+  statusCode    Int?             // solo relevante para HTTP
+  errorMessage  String?
+  certExpiresAt DateTime?        // solo relevante para TLS
 
   @@index([serviceId, timestamp(sort: Desc)])
+}
+
+// Un incidente cubre un tramo continuo de fallos: se abre en el primer check
+// fallido y se cierra en el primer check que vuelve a tener exito. Evita
+// tener que derivar "esta caido desde cuando" escaneando CheckResult.
+model Incident {
+  id         String           @id @default(cuid())
+  serviceId  String
+  service    MonitoredService @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  startedAt  DateTime         @default(now())
+  resolvedAt DateTime?
+  cause      String?
+
+  @@index([serviceId, resolvedAt])
+  @@index([startedAt(sort: Desc)])
 }
 
 // Agregado pre-calculado para que las graficas de historico y el % de uptime

@@ -3,6 +3,7 @@ import { ScheduleModule as NestScheduleModule } from '@nestjs/schedule';
 import { ChecksModule } from '../checks/checks.module';
 import { HistoryModule } from '../history/history.module';
 import { ServicesModule } from '../services/services.module';
+import { IncidentsModule } from '../incidents/incidents.module';
 import { ScheduleService } from './schedule.service';
 
 @Module({
@@ -11,6 +12,7 @@ import { ScheduleService } from './schedule.service';
     ChecksModule,
     HistoryModule,
     ServicesModule,
+    IncidentsModule,
   ],
   providers: [ScheduleService],
 })
