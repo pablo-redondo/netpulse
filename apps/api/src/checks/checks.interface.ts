@@ -7,6 +7,8 @@ export interface CheckOutcome {
   errorMessage: string | null;
   /** Solo la produce TlsCheckStrategy. */
   certExpiresAt?: Date | null;
+  /** Detalle tecnico especifico del protocolo (informativo). */
+  details?: string | null;
 }
 
 export interface CheckStrategy {

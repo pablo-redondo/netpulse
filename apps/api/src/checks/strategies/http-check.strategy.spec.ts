@@ -1,9 +1,15 @@
 import { HttpCheckStrategy } from './http-check.strategy';
 
-function mockFetchResolvedWith(status: number, body = ''): jest.Mock {
-  return jest
-    .fn()
-    .mockResolvedValue({ status, text: () => Promise.resolve(body) });
+function mockFetchResolvedWith(
+  status: number,
+  body = '',
+  serverHeader: string | null = null,
+): jest.Mock {
+  return jest.fn().mockResolvedValue({
+    status,
+    text: () => Promise.resolve(body),
+    headers: { get: () => serverHeader },
+  });
 }
 
 describe('HttpCheckStrategy', () => {
@@ -115,11 +121,31 @@ describe('HttpCheckStrategy', () => {
 
   it('sin expectedContent, no lee el body de la respuesta', async () => {
     const textMock = jest.fn().mockResolvedValue('');
-    global.fetch = jest.fn().mockResolvedValue({ status: 200, text: textMock });
+    global.fetch = jest.fn().mockResolvedValue({
+      status: 200,
+      text: textMock,
+      headers: { get: () => null },
+    });
 
     await strategy.run('https://github.com');
 
     expect(textMock).not.toHaveBeenCalled();
+  });
+
+  it('recoge el header Server como detalle tecnico', async () => {
+    global.fetch = mockFetchResolvedWith(200, '', 'cloudflare');
+
+    const outcome = await strategy.run('https://cloudflare.com');
+
+    expect(outcome.details).toBe('Server: cloudflare');
+  });
+
+  it('sin header Server, el detalle es nulo', async () => {
+    global.fetch = mockFetchResolvedWith(200);
+
+    const outcome = await strategy.run('https://github.com');
+
+    expect(outcome.details).toBeNull();
   });
 
   it('aborta y devuelve fallo si el servidor no responde a tiempo', async () => {

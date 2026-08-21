@@ -141,4 +141,18 @@ export const seedServices: SeedService[] = [
     target: 'registry-1.docker.io',
     vlanGroup: VLAN_INFRA,
   },
+
+  // --- NTP (offset de reloj) ---
+  {
+    name: 'Cloudflare NTP',
+    type: CheckType.NTP,
+    target: 'time.cloudflare.com',
+    vlanGroup: VLAN_INFRA,
+  },
+  {
+    name: 'Google NTP',
+    type: CheckType.NTP,
+    target: 'time.google.com',
+    vlanGroup: VLAN_INFRA,
+  },
 ];

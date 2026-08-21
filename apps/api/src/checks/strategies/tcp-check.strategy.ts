@@ -31,6 +31,9 @@ export class TcpCheckStrategy implements CheckStrategy {
           latencyMs: Date.now() - startedAt,
           statusCode: null,
           errorMessage: null,
+          details: socket.remoteAddress
+            ? `Conectado a ${socket.remoteAddress}`
+            : null,
         });
       });
       socket.once('timeout', () => {

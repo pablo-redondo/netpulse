@@ -12,6 +12,7 @@ enum CheckType {
   DNS
   TCP
   TLS
+  NTP
 }
 
 model MonitoredService {
@@ -43,6 +44,9 @@ model CheckResult {
   statusCode    Int?             // solo relevante para HTTP
   errorMessage  String?
   certExpiresAt DateTime?        // solo relevante para TLS
+  // Detalle tecnico especifico del protocolo (header Server, IPs resueltas,
+  // cifra TLS, offset NTP...). Informativo, no participa en success/fail.
+  details       String?
 
   @@index([serviceId, timestamp(sort: Desc)])
 }

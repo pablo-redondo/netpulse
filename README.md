@@ -14,7 +14,7 @@ El diseño completo, con las decisiones y por qué se tomaron, está en
 
 ## Qué monitoriza
 
-Son diecinueve servicios públicos, elegidos para cubrir los cuatro tipos de
+Son veintiún servicios públicos, elegidos para cubrir los cinco tipos de
 comprobación. Ninguno es infraestructura mía: son sitios que ya reciben tráfico
 de medio mundo. El catálogo completo vive en un único sitio,
 [`apps/api/src/admin/seed-data.ts`](./apps/api/src/admin/seed-data.ts), del
@@ -27,6 +27,7 @@ que tiran tanto el seed de desarrollo como el de producción.
 | Cloudflare / Google / GitHub DNS | DNS | Resuelve un hostname preguntándole a un resolver público distinto |
 | GitHub TCP:443, Gmail SMTP TCP:587... | TCP | Abre un socket al puerto y lo cierra, sin hablar el protocolo de aplicación |
 | Cloudflare / GitHub / Google / Docker Hub TLS | TLS | Abre un handshake TLS y mira cuántos días le quedan al certificado |
+| Cloudflare NTP, Google NTP | NTP | Cliente NTP propio por UDP: calcula el desfase entre el reloj local y el del servidor |
 
 Un check HTTP se da por bueno si el código es menor que 400 y, si el servicio
 tiene `expectedContent` configurado, si además el body contiene ese texto —útil
@@ -34,7 +35,15 @@ para detectar una web que responde 200 pero sirve una página de error o un
 placeholder. Los de DNS y TCP no tienen código de estado: cuentan como
 correctos si la resolución devuelve al menos una dirección o si el socket
 llega a conectar. El de TLS falla si el certificado ya caducó o si le quedan
-menos de 14 días, para poder avisar antes de que caduque de verdad.
+menos de 14 días, para poder avisar antes de que caduque de verdad. El de NTP
+falla si la respuesta viene con stratum inválido (0 o ≥16, que en el protocolo
+significa "no confíes en esta hora").
+
+Cada comprobación, además de si fue bien o mal, guarda un detalle técnico
+propio del protocolo —el header `Server` en HTTP, las IPs resueltas en DNS, la
+IP remota en TCP, la versión TLS y el emisor del certificado, el desfase de
+reloj en milisegundos en NTP—, visible en la tabla de últimas comprobaciones
+de cada servicio.
 
 Las peticiones HTTP van con un `User-Agent` identificable
 (`NetPulse-Monitor/1.0 (portfolio project)`), para que cualquiera que mire sus
@@ -76,6 +85,13 @@ El check TLS nació de la misma lógica: es otra comprobación "de red" que no
 necesita privilegios especiales —`tls.connect` es API estándar de Node— y que
 además resuelve un problema real y muy típico en ASIR, el del certificado que
 caduca un fin de semana y nadie se entera hasta que un usuario se lo encuentra.
+
+El check NTP va un paso más allá: en vez de envolver una librería, implementa
+el protocolo a mano sobre `node:dgram` —un socket UDP normal, sin privilegios—
+construyendo el paquete de 48 bytes de NTPv3 y aplicando la fórmula clásica de
+sincronización con las cuatro marcas de tiempo (T1–T4) para calcular el
+desfase de reloj. Es el hueco que dejó el ping: un protocolo de verdad, a
+bajo nivel, que no depende de ningún binario del sistema.
 
 ## Incidentes y alertas
 

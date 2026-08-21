@@ -54,6 +54,10 @@ export class TlsCheckStrategy implements CheckStrategy {
         const certExpiresAt = new Date(cert.valid_to);
         const daysRemaining =
           (certExpiresAt.getTime() - Date.now()) / (24 * 60 * 60 * 1000);
+        const protocol = socket.getProtocol?.() ?? 'TLS';
+        const issuer = String(
+          cert.issuer?.O ?? cert.issuer?.CN ?? 'emisor desconocido',
+        );
 
         finish({
           success: daysRemaining > WARN_WITHIN_DAYS,
@@ -64,6 +68,7 @@ export class TlsCheckStrategy implements CheckStrategy {
               ? `El certificado caduca en ${Math.max(0, Math.floor(daysRemaining))} día(s)`
               : null,
           certExpiresAt,
+          details: `${protocol} · Emisor: ${issuer}`,
         });
       });
       socket.once('timeout', () => {

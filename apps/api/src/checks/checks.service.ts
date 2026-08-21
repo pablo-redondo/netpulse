@@ -4,6 +4,7 @@ import { HttpCheckStrategy } from './strategies/http-check.strategy';
 import { DnsCheckStrategy } from './strategies/dns-check.strategy';
 import { TcpCheckStrategy } from './strategies/tcp-check.strategy';
 import { TlsCheckStrategy } from './strategies/tls-check.strategy';
+import { NtpCheckStrategy } from './strategies/ntp-check.strategy';
 import type { CheckOutcome, CheckStrategy } from './checks.interface';
 
 @Injectable()
@@ -15,12 +16,14 @@ export class ChecksService {
     dnsCheckStrategy: DnsCheckStrategy,
     tcpCheckStrategy: TcpCheckStrategy,
     tlsCheckStrategy: TlsCheckStrategy,
+    ntpCheckStrategy: NtpCheckStrategy,
   ) {
     this.strategies = new Map<CheckType, CheckStrategy>([
       [httpCheckStrategy.type, httpCheckStrategy],
       [dnsCheckStrategy.type, dnsCheckStrategy],
       [tcpCheckStrategy.type, tcpCheckStrategy],
       [tlsCheckStrategy.type, tlsCheckStrategy],
+      [ntpCheckStrategy.type, ntpCheckStrategy],
     ]);
   }
 

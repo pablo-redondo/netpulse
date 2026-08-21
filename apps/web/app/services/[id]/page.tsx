@@ -85,6 +85,11 @@ export default async function ServiceDetailPage(props: PageProps<'/services/[id]
           <div className="mt-1 text-xs text-text-muted">
             {latest ? formatRelative(latest.timestamp) : 'sin comprobaciones'}
           </div>
+          {latest?.details && (
+            <div className="mt-1 truncate font-mono text-xs text-text-secondary">
+              {latest.details}
+            </div>
+          )}
         </div>
         <StatTile
           label="Disponibilidad"

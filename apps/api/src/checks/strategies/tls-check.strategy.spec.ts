@@ -66,7 +66,8 @@ describe('TlsCheckStrategy', () => {
 
     expect(outcome.success).toBe(true);
     expect(outcome.errorMessage).toBeNull();
-    expect(outcome.certExpiresAt?.getTime()).toBeCloseTo(validTo.getTime(), -3);
+    // toUTCString() trunca a segundos, asi que el redondeo pierde hasta 999ms.
+    expect(outcome.certExpiresAt?.getTime()).toBeCloseTo(validTo.getTime(), -4);
   });
 
   it('da por malo un certificado que caduca dentro de pocos dias', async () => {

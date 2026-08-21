@@ -25,6 +25,7 @@ export function ChecksTable({ checks }: { checks: CheckResult[] }) {
               <th className="px-4 py-2 font-medium">Resultado</th>
               <th className="px-4 py-2 font-medium">Latencia</th>
               <th className="px-4 py-2 font-medium">Código</th>
+              <th className="px-4 py-2 font-medium">Info técnica</th>
               <th className="px-4 py-2 font-medium">Detalle</th>
             </tr>
           </thead>
@@ -42,6 +43,9 @@ export function ChecksTable({ checks }: { checks: CheckResult[] }) {
                 </td>
                 <td className="tabular px-4 py-2 text-text-secondary">
                   {check.statusCode ?? '—'}
+                </td>
+                <td className="px-4 py-2 font-mono text-xs text-text-secondary">
+                  {check.details ?? '—'}
                 </td>
                 <td className="px-4 py-2 text-text-muted">{check.errorMessage ?? '—'}</td>
               </tr>

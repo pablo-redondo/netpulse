@@ -8,6 +8,8 @@ export interface CheckResult {
   errorMessage: string | null;
   /** Solo para TLS: fecha de expiración del certificado observado. */
   certExpiresAt: string | null;
+  /** Detalle técnico específico del protocolo (informativo). */
+  details: string | null;
 }
 
 export interface Incident {

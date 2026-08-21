@@ -3,9 +3,29 @@ import Link from 'next/link';
 import './globals.css';
 import { ThemeToggle } from '@/components/theme-toggle';
 
+// URL de producción actual, necesaria para que Next.js resuelva las URLs
+// absolutas de las imágenes Open Graph/Twitter. Si el dominio cambia, se
+// actualiza aquí.
+const SITE_URL = 'https://netpulse-web-tan.vercel.app';
+const DESCRIPTION =
+  'Monitorización de red e infraestructura en tiempo real: HTTP, DNS, TCP, TLS y NTP, con incidentes, alertas y una vista de topología.';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: 'NetPulse',
-  description: 'Dashboard de monitorización de red e infraestructura',
+  description: DESCRIPTION,
+  openGraph: {
+    title: 'NetPulse',
+    description: DESCRIPTION,
+    siteName: 'NetPulse',
+    type: 'website',
+    locale: 'es_ES',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'NetPulse',
+    description: DESCRIPTION,
+  },
 };
 
 // Aplica el tema guardado antes del primer paint para evitar el flash.

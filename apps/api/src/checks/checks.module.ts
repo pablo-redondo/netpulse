@@ -4,6 +4,7 @@ import { HttpCheckStrategy } from './strategies/http-check.strategy';
 import { DnsCheckStrategy } from './strategies/dns-check.strategy';
 import { TcpCheckStrategy } from './strategies/tcp-check.strategy';
 import { TlsCheckStrategy } from './strategies/tls-check.strategy';
+import { NtpCheckStrategy } from './strategies/ntp-check.strategy';
 
 @Module({
   providers: [
@@ -12,6 +13,7 @@ import { TlsCheckStrategy } from './strategies/tls-check.strategy';
     DnsCheckStrategy,
     TcpCheckStrategy,
     TlsCheckStrategy,
+    NtpCheckStrategy,
   ],
   exports: [ChecksService],
 })

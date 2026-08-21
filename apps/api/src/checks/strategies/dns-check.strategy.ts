@@ -19,11 +19,16 @@ export class DnsCheckStrategy implements CheckStrategy {
     try {
       const addresses = await resolver.resolve4(hostname);
       const latencyMs = Date.now() - startedAt;
+      const shown = addresses.slice(0, 3).join(', ');
       return {
         success: addresses.length > 0,
         latencyMs,
         statusCode: null,
         errorMessage: null,
+        details:
+          addresses.length > 0
+            ? `${addresses.length} registro(s) A: ${shown}${addresses.length > 3 ? '…' : ''}`
+            : null,
       };
     } catch (error) {
       return {

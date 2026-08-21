@@ -46,6 +46,7 @@ export class HistoryService {
           statusCode: outcome.statusCode,
           errorMessage: outcome.errorMessage,
           certExpiresAt: outcome.certExpiresAt ?? null,
+          details: outcome.details ?? null,
         },
       });
 

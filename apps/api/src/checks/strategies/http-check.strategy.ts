@@ -25,6 +25,8 @@ export class HttpCheckStrategy implements CheckStrategy {
         headers: { 'User-Agent': USER_AGENT },
       });
       const latencyMs = Date.now() - startedAt;
+      const server = response.headers.get('server');
+      const details = server ? `Server: ${server}` : null;
 
       if (response.status >= 400) {
         return {
@@ -32,6 +34,7 @@ export class HttpCheckStrategy implements CheckStrategy {
           latencyMs,
           statusCode: response.status,
           errorMessage: null,
+          details,
         };
       }
 
@@ -44,6 +47,7 @@ export class HttpCheckStrategy implements CheckStrategy {
             latencyMs,
             statusCode: response.status,
             errorMessage: `El contenido esperado ("${expectedContent}") no aparece en la respuesta`,
+            details,
           };
         }
       }
@@ -53,6 +57,7 @@ export class HttpCheckStrategy implements CheckStrategy {
         latencyMs,
         statusCode: response.status,
         errorMessage: null,
+        details,
       };
     } catch (error) {
       return {

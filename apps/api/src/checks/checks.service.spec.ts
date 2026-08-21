@@ -5,6 +5,7 @@ import type { HttpCheckStrategy } from './strategies/http-check.strategy';
 import type { DnsCheckStrategy } from './strategies/dns-check.strategy';
 import type { TcpCheckStrategy } from './strategies/tcp-check.strategy';
 import type { TlsCheckStrategy } from './strategies/tls-check.strategy';
+import type { NtpCheckStrategy } from './strategies/ntp-check.strategy';
 
 const OK: CheckOutcome = {
   success: true,
@@ -28,6 +29,7 @@ describe('ChecksService', () => {
       fakeStrategy(CheckType.DNS) as unknown as DnsCheckStrategy,
       fakeStrategy(CheckType.TCP) as unknown as TcpCheckStrategy,
       fakeStrategy(CheckType.TLS) as unknown as TlsCheckStrategy,
+      fakeStrategy(CheckType.NTP) as unknown as NtpCheckStrategy,
     );
 
     const monitoredService = {
@@ -51,6 +53,7 @@ describe('ChecksService', () => {
       fakeStrategy(CheckType.DNS, dnsRun) as unknown as DnsCheckStrategy,
       fakeStrategy(CheckType.TCP) as unknown as TcpCheckStrategy,
       fakeStrategy(CheckType.TLS) as unknown as TlsCheckStrategy,
+      fakeStrategy(CheckType.NTP) as unknown as NtpCheckStrategy,
     );
 
     const monitoredService = {
@@ -70,6 +73,7 @@ describe('ChecksService', () => {
       fakeStrategy(CheckType.DNS) as unknown as DnsCheckStrategy,
       fakeStrategy(CheckType.TCP, tcpRun) as unknown as TcpCheckStrategy,
       fakeStrategy(CheckType.TLS) as unknown as TlsCheckStrategy,
+      fakeStrategy(CheckType.NTP) as unknown as NtpCheckStrategy,
     );
 
     const monitoredService = {
@@ -89,6 +93,7 @@ describe('ChecksService', () => {
       fakeStrategy(CheckType.DNS) as unknown as DnsCheckStrategy,
       fakeStrategy(CheckType.TCP) as unknown as TcpCheckStrategy,
       fakeStrategy(CheckType.TLS, tlsRun) as unknown as TlsCheckStrategy,
+      fakeStrategy(CheckType.NTP) as unknown as NtpCheckStrategy,
     );
 
     const monitoredService = {
@@ -101,6 +106,29 @@ describe('ChecksService', () => {
     expect(tlsRun).toHaveBeenCalledWith('github.com', monitoredService);
   });
 
+  it('elige la estrategia NTP para un servicio de tipo NTP', async () => {
+    const ntpRun = jest.fn().mockResolvedValue(OK);
+    const service = new ChecksService(
+      fakeStrategy(CheckType.HTTP) as unknown as HttpCheckStrategy,
+      fakeStrategy(CheckType.DNS) as unknown as DnsCheckStrategy,
+      fakeStrategy(CheckType.TCP) as unknown as TcpCheckStrategy,
+      fakeStrategy(CheckType.TLS) as unknown as TlsCheckStrategy,
+      fakeStrategy(CheckType.NTP, ntpRun) as unknown as NtpCheckStrategy,
+    );
+
+    const monitoredService = {
+      type: CheckType.NTP,
+      target: 'time.cloudflare.com',
+      expectedContent: null,
+    };
+    await service.execute(monitoredService);
+
+    expect(ntpRun).toHaveBeenCalledWith(
+      'time.cloudflare.com',
+      monitoredService,
+    );
+  });
+
   it('convierte un rechazo de la estrategia en un CheckOutcome de fallo, sin propagar la excepcion', async () => {
     const service = new ChecksService(
       fakeStrategy(
@@ -110,6 +138,7 @@ describe('ChecksService', () => {
       fakeStrategy(CheckType.DNS) as unknown as DnsCheckStrategy,
       fakeStrategy(CheckType.TCP) as unknown as TcpCheckStrategy,
       fakeStrategy(CheckType.TLS) as unknown as TlsCheckStrategy,
+      fakeStrategy(CheckType.NTP) as unknown as NtpCheckStrategy,
     );
 
     const outcome = await service.execute({
@@ -135,6 +164,7 @@ describe('ChecksService', () => {
       fakeStrategy(CheckType.DNS) as unknown as DnsCheckStrategy,
       fakeStrategy(CheckType.TCP) as unknown as TcpCheckStrategy,
       fakeStrategy(CheckType.TLS) as unknown as TlsCheckStrategy,
+      fakeStrategy(CheckType.NTP) as unknown as NtpCheckStrategy,
     );
 
     const outcome = await service.execute({
