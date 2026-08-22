@@ -236,7 +236,7 @@ En `apps/api`:
 | `PORT` | `3000` | Puerto del backend. El `.env.example` lo pone en `3001` para no chocar con Next |
 | `CHECK_INTERVAL_MS` | `300000` | Cada cuánto se lanza la ronda de comprobaciones |
 | `ALERT_WEBHOOK_URL` | — | Opcional. Webhook de Discord/Slack para avisos de caída/recuperación |
-| `SEED_SECRET` | — | Opcional en local. Protege `GET /admin/seed`; en Render lo genera el blueprint |
+| `SEED_SECRET` | — | Opcional en local. Protege `POST /admin/seed` (cabecera `Authorization: Bearer …`); en Render lo genera el blueprint |
 
 En `apps/web`:
 
@@ -265,11 +265,26 @@ fuera y tampoco autenticación que proteger.
 `hours` admite hasta 720 (30 días) y `limit` hasta 100; por encima de eso se
 recorta. Si el id no existe, 404.
 
-Hay una excepción a "todo es de solo lectura": `GET /admin/seed?secret=...`,
-protegido por `SEED_SECRET`, que vuelve a sembrar el catálogo de servicios.
-Existe porque el plan free de Render no da acceso a Shell ni a Jobs, así que
-es la única forma de sembrar la base de datos de producción sin salir de la
-red interna de Render (ver "Despliegue" más abajo).
+Hay una excepción a "todo es de solo lectura": `POST /admin/seed`, protegido
+por `SEED_SECRET`, que vuelve a sembrar el catálogo de servicios. Existe
+porque el plan free de Render no da acceso a Shell ni a Jobs, así que es la
+única forma de sembrar la base de datos de producción sin salir de la red
+interna de Render (ver "Despliegue" más abajo).
+
+El secreto va en la cabecera `Authorization`, nunca en la URL ni en el cuerpo:
+una query string acaba en los logs del servidor, en la cabecera `Referer` y en
+el historial del navegador.
+
+```bash
+curl -X POST https://<tu-servicio>.onrender.com/admin/seed \
+  -H "Authorization: Bearer <SEED_SECRET>"
+```
+
+Respuestas: `200` con `{"seeded":N}` si el secreto es correcto, `401` si falta
+o no coincide, y `503` si el servicio se ha desplegado sin `SEED_SECRET`
+—prefiere fallar a quedarse abierto. Aunque el secreto sea correcto, el
+endpoint **no acepta datos del cliente**: siembra el catálogo fijo de
+`seed-data.ts`, así que no hay forma de dar de alta un `target` arbitrario.
 
 ## Sobre el panel
 
@@ -365,14 +380,21 @@ así que no hace falta rellenar formularios a mano:
 2. El build ya se encarga de instalar, compilar `shared-types`, aplicar las
    migraciones de Prisma y compilar el backend, en ese orden. No hay que
    tocar nada más para que arranque.
-3. Sembrar el catálogo es cosa de una vez: visitar
-   `https://<tu-servicio>.onrender.com/admin/seed?secret=<SEED_SECRET>` en el
-   navegador. `SEED_SECRET` lo genera el propio blueprint —está en la pestaña
-   Environment del servicio en Render— y el endpoint hace upsert por nombre,
-   así que volver a llamarlo tras añadir servicios nuevos al catálogo es
-   seguro. No hace falta Shell ni Jobs, que en el plan free de Render son de
-   pago: por eso el sembrado va por un endpoint HTTP y no por un comando
-   suelto.
+3. Sembrar el catálogo es cosa de una vez, con un `POST` al endpoint de
+   sembrado. `SEED_SECRET` lo genera el propio blueprint —está en la pestaña
+   Environment del servicio en Render—:
+
+   ```bash
+   curl -X POST https://<tu-servicio>.onrender.com/admin/seed \
+     -H "Authorization: Bearer <SEED_SECRET>"
+   ```
+
+   El endpoint hace upsert por nombre, así que volver a llamarlo tras añadir
+   servicios nuevos al catálogo es seguro. No hace falta Shell ni Jobs, que en
+   el plan free de Render son de pago: por eso el sembrado va por un endpoint
+   HTTP y no por un comando suelto. Al ser `POST` con el secreto en cabecera,
+   no se puede lanzar desde la barra del navegador —esa es justamente la
+   idea—: hace falta `curl` o cualquier cliente HTTP.
 
 4. Opcional: para recibir alertas de caídas y recuperaciones en Discord o
    Slack, añadir `ALERT_WEBHOOK_URL` a mano en Environment con la URL del
