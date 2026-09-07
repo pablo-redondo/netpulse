@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Salida generada por el adaptador de Cloudflare y estado local de
+    // wrangler: es codigo compilado, no fuente que debamos lintar.
+    ".open-next/**",
+    ".wrangler/**",
   ]),
 ]);
 

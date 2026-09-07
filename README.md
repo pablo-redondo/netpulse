@@ -363,11 +363,15 @@ vez: una secuencia `100, 200, timeout, 300` tiene que dar de media 200, no
 
 ## Despliegue
 
-El backend va a Render y el frontend a Vercel, cada uno por su lado. La razón
-de que sean dos sitios distintos y no todo junto es que el backend necesita
-seguir vivo entre peticiones —tiene un scheduler corriendo dentro— y eso pide
-un proceso persistente, mientras que el frontend es un montón de páginas que
-se sirven bajo demanda y encajan mejor en algo como Vercel.
+El backend va a Render y el frontend a Cloudflare Workers, cada uno por su
+lado. La razón de que sean dos sitios distintos y no todo junto es que el
+backend necesita seguir vivo entre peticiones —tiene un scheduler corriendo
+dentro— y eso pide un proceso persistente, mientras que el frontend es un
+montón de páginas que se sirven bajo demanda y encajan bien en el borde.
+
+El backend no podría irse a Workers aunque quisiéramos: además del scheduler,
+los checks TCP, TLS y NTP abren sockets crudos —UDP en el caso de NTP— que el
+runtime de Workers no ofrece.
 
 ### Backend (Render)
 
@@ -407,12 +411,46 @@ de datos gratis expira a los 30 días. Para que esto sea un monitor de verdad y
 no un experimento de fin de semana, el paso siguiente es subir `netpulse-api`
 a un plan de pago tipo Starter, que no se duerme.
 
-### Frontend (Vercel)
+### Frontend (Cloudflare Workers)
 
-1. Importar el repo en Vercel. El framework se detecta solo; lo único que
-   hay que fijar a mano es el **Root Directory**: `apps/web`.
-2. Una variable de entorno: `NETPULSE_API_URL`, con la URL pública que dio
-   Render (algo como `https://netpulse-api.onrender.com`).
+El frontend va a Cloudflare Workers mediante [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare),
+el adaptador que convierte la salida de `next build` en un Worker. Hace falta
+porque el panel **no es un sitio estático**: todas las páginas son server
+components que consultan la API en cada petición, así que `wrangler deploy` a
+secas no sabría qué desplegar.
+
+La configuración vive en `apps/web/wrangler.jsonc`. Dos detalles que no son
+opcionales:
+
+- `compatibility_flags: ["nodejs_compat"]`, que exige el adaptador.
+- `compatibility_date` **posterior a 2025-04-01**. Por debajo de esa fecha las
+  variables declaradas en Wrangler no se vuelcan en `process.env`, y como
+  `lib/api.ts` lee `process.env.NETPULSE_API_URL`, el panel arrancaría
+  apuntando al fallback de `localhost` y no encontraría el backend nunca.
+
+En el proyecto de Cloudflare, los comandos:
+
+| Ajuste | Valor |
+|---|---|
+| Build command | `pnpm --filter @netpulse/web build:cf` |
+| Deploy command | `pnpm --filter @netpulse/web exec wrangler deploy` |
+
+El `pnpm --filter` no es cosmético: sitúa el directorio de trabajo en
+`apps/web`. Ejecutar `wrangler deploy` en la raíz de un monorepo falla con
+*"The Cloudflare application detection logic has been run in the root of a
+workspace"*, porque Wrangler se niega a adivinar qué app del workspace
+desplegar.
+
+`NETPULSE_API_URL` va en `vars` dentro de `wrangler.jsonc` —no es un secreto,
+es la URL pública de un backend de solo lectura— y se puede sobreescribir
+desde el dashboard.
+
+Para trabajar en local contra el runtime real de Workers:
+
+```bash
+pnpm --filter @netpulse/web build:cf     # next build + bundle de OpenNext
+pnpm --filter @netpulse/web preview:cf   # lo sirve con workerd
+```
 
 No hace falta tocar CORS en ningún sitio. El frontend llama a la API desde
 server components, no desde el navegador, así que esas peticiones nunca
@@ -427,7 +465,7 @@ enseña un aviso en vez de un error pelado.
 
 ## Estado del proyecto
 
-Desplegado y funcionando: backend en Render, frontend en Vercel, base de
+Desplegado y funcionando: backend en Render, frontend en Cloudflare Workers, base de
 datos sembrada y el scheduler corriendo de verdad contra los servicios
 públicos del catálogo.
 

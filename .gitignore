@@ -10,3 +10,6 @@ coverage/
 .turbo/
 generated/
 *.tsbuildinfo
+# Salida del adaptador de Cloudflare y estado local de wrangler
+.open-next/
+.wrangler/

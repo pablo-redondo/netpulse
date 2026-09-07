@@ -1,0 +1,23 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "netpulse-web",
+  "main": ".open-next/worker.js",
+  // >= 2025-04-01 a proposito: por debajo de esa fecha las vars de Wrangler no
+  // se vuelcan en process.env, y tanto lib/api.ts como el route handler de
+  // exportacion CSV leen process.env.NETPULSE_API_URL. Con una fecha anterior
+  // el panel arrancaria apuntando al fallback de localhost.
+  "compatibility_date": "2026-08-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "vars": {
+    // No es un secreto: es la URL publica del backend en Render, que ademas
+    // solo expone lectura. Se puede sobreescribir desde el dashboard.
+    "NETPULSE_API_URL": "https://netpulse-api-3fvg.onrender.com"
+  },
+  "observability": {
+    "enabled": true
+  }
+}
