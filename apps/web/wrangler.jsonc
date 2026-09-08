@@ -1,6 +1,10 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "netpulse-web",
+  // Tiene que coincidir con el nombre del proyecto en Cloudflare. Si no
+  // coincide, Workers Builds lo sobreescribe con el suyo y un `wrangler
+  // deploy` lanzado a mano desde local acabaria creando un Worker distinto
+  // en paralelo al bueno.
+  "name": "netpulse",
   "main": ".open-next/worker.js",
   // >= 2025-04-01 a proposito: por debajo de esa fecha las vars de Wrangler no
   // se vuelcan en process.env, y tanto lib/api.ts como el route handler de
@@ -12,6 +16,9 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
+  // Explicito en vez de heredar el valor por defecto: es la URL por la que se
+  // sirve el panel hoy (netpulse.<cuenta>.workers.dev).
+  "workers_dev": true,
   "vars": {
     // No es un secreto: es la URL publica del backend en Render, que ademas
     // solo expone lectura. Se puede sobreescribir desde el dashboard.
