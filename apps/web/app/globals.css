@@ -1,63 +1,62 @@
 @import "tailwindcss";
 
 /*
- * Tema "aurora glass": cristal esmerilado flotando sobre un fondo de
- * gradientes en movimiento. Sustituye al tema "terminal CRT" anterior.
+ * Tema "pulso de fósforo": una consola de monitorización de verdad, no una
+ * tarjeta SaaS pintada de verde. El nombre del proyecto es NetPulse -esto
+ * vigila el pulso de una red-, así que el motivo central es literal: una
+ * traza de electrocardiograma corre por la cabecera, y los paneles llevan
+ * chrome de ventana de terminal (barra con "LEDs" cuadrados + ruta de
+ * archivo, esquinas de escáner) en vez de tarjetas redondeadas con sombra.
+ * Una sola familia tipográfica -monoespaciada- para toda la interfaz: es
+ * una consola, no un dashboard con una fuente de exposición aparte.
  *
- * Sigue comprometido con el modo oscuro -es un panel de monitorización, se
- * lee mejor sobre negro-, pero cambia el lenguaje visual de "terminal verde
- * fósforo" a "consola de observabilidad moderna": superficies translúcidas
- * con `backdrop-filter: blur()`, bordes de un solo pixel casi invisibles que
- * solo el blur revela, y una paleta de acento en gradiente cian→violeta en
- * vez de un único verde plano.
- *
- * El verde/ámbar/rojo de estado se conserva -es información, no decoración,
- * y cambiar de canal ahí sería confundir al lector- pero se afina para que
- * conviva con el cristal: algo más saturado, con un halo de glow suave en
- * vez del `text-shadow` de fósforo del tema anterior.
+ * El verde/ámbar/rojo de estado se apoya siempre en icono + etiqueta, nunca
+ * solo en el color (ver StatusBadge). El verde de marca hace doble trabajo
+ * -identidad y "todo OK"-, así que el resto del chrome usa verdes MUY
+ * desaturados: si todo brillara en neón, "operativo" dejaría de significar
+ * nada, y la traza de latencia va en cian para no confundirse nunca con el
+ * semáforo de estado.
  */
 :root {
   color-scheme: dark;
 
-  /* Superficies: azul-negro muy oscuro, no gris ni negro puro -deja sitio al
-     gradiente de fondo para respirar por debajo del cristal. */
-  --plane: #05060d;
-  --surface-1: rgba(255, 255, 255, 0.045);
-  --surface-2: rgba(255, 255, 255, 0.085);
-  --surface-raised: rgba(255, 255, 255, 0.12);
+  /* Superficies: negro con un punto de verde, opacas de verdad -esto es una
+     ventana de terminal, no cristal esmerilado. */
+  --plane: #050b07;
+  --surface-1: #0a140e;
+  --surface-2: #101f16;
+  --surface-raised: #16291c;
 
   /* Tinta */
-  --text-primary: #f3f5fb;
-  --text-secondary: #a6acc4;
-  --text-muted: #6d7392;
+  --text-primary: #ddffe4;
+  --text-secondary: #8fb89b;
+  --text-muted: #55735f;
 
   /* Chrome de gráfica */
-  --gridline: rgba(255, 255, 255, 0.06);
-  --axis: rgba(255, 255, 255, 0.16);
-  --border: rgba(255, 255, 255, 0.09);
-  --border-strong: rgba(255, 255, 255, 0.22);
+  --gridline: rgba(70, 255, 140, 0.07);
+  --axis: rgba(70, 255, 140, 0.22);
+  --border: rgba(70, 255, 140, 0.16);
+  --border-strong: rgba(70, 255, 140, 0.4);
 
-  /* Serie categórica (latencia) */
-  --series-1: #22d3ee;
+  /* Serie categórica (latencia): cian, deliberadamente fuera de la familia
+     verde para que la gráfica nunca se lea como un semáforo de estado. */
+  --series-1: #4dd8ff;
 
   /* Estado: reservado, siempre con icono + etiqueta, nunca color a secas */
-  --status-good: #34e58c;
-  --status-warning: #f5a524;
-  --status-critical: #fb5586;
-  --status-good-text: #34e58c;
-  --status-good-dim: rgba(52, 229, 140, 0.38);
+  --status-good: #39ff6a;
+  --status-warning: #ffb020;
+  --status-critical: #ff4d6a;
+  --status-good-text: #39ff6a;
+  --status-good-dim: rgba(57, 255, 106, 0.34);
 
-  /* Acento de identidad: gradiente cian → violeta, con un extremo "sólido"
-     para donde no se pueda usar el gradiente (ej. box-shadow de foco). */
-  --accent: #7c9bff;
-  --accent-2: #22d3ee;
-  --accent-3: #b18cff;
-  --accent-dim: rgba(124, 155, 255, 0.5);
-  --accent-gradient: linear-gradient(120deg, var(--accent-2), var(--accent) 55%, var(--accent-3));
+  /* Acento de identidad = el verde de estado OK, fósforo puro */
+  --accent: #39ff6a;
+  --accent-2: #4dd8ff;
+  --accent-dim: rgba(57, 255, 106, 0.55);
+  --accent-gradient: linear-gradient(120deg, #39ff6a, #7dffb0 55%, #4dd8ff);
 
-  --glass-blur: 20px;
-  --shadow-glass: 0 8px 32px rgba(3, 4, 12, 0.45);
-  --shadow-glass-lg: 0 24px 60px -12px rgba(3, 4, 12, 0.65);
+  --shadow-panel: 0 10px 28px -10px rgba(0, 0, 0, 0.65);
+  --shadow-panel-lg: 0 20px 48px -14px rgba(0, 0, 0, 0.75);
 }
 
 @theme inline {
@@ -85,12 +84,11 @@
 
   --color-accent: var(--accent);
   --color-accent-2: var(--accent-2);
-  --color-accent-3: var(--accent-3);
 
-  /* Sans es la voz de la interfaz; mono queda para cifras/timestamps, donde
-     las tabulares importan. Ambas variables las inyecta next/font. */
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
-    "Segoe UI", sans-serif;
+  /* Una sola cara, monoespaciada, para toda la interfaz: es una consola.
+     next/font la auto-hospeda en el build. */
+  --font-sans: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular",
+    "Menlo", "Consolas", monospace;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular",
     "Menlo", "Consolas", monospace;
 }
@@ -106,10 +104,9 @@ body {
   position: relative;
 }
 
-/* --- Fondo "aurora": tres manchas de gradiente que derivan muy lentamente.
-   Fijas a la ventana, detrás de todo, pensadas para verse A TRAVÉS del
-   cristal esmerilado de los paneles, nunca compitiendo con el texto. --- */
-.aurora-field {
+/* --- Fondo: rejilla de diagrama de red + un barrido de radar muy lento.
+   Fijo a la ventana, detrás de todo. --- */
+.net-field {
   position: fixed;
   inset: 0;
   z-index: -1;
@@ -117,130 +114,119 @@ body {
   pointer-events: none;
   background: var(--plane);
 }
-
-.aurora-field::before {
-  /* Rejilla tenue tipo diagrama de red, heredada del tema anterior pero muy
-     por debajo del aurora. */
+.net-field::before {
   content: "";
   position: absolute;
   inset: -2px;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-  background-size: 56px 56px;
-  mask-image: radial-gradient(80% 60% at 50% 0%, black, transparent 75%);
+    linear-gradient(rgba(70, 255, 140, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(70, 255, 140, 0.05) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: radial-gradient(85% 65% at 50% 0%, black, transparent 78%);
 }
-
-.aurora-blob {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(90px);
-  opacity: 0.55;
-  will-change: transform;
-}
-.aurora-blob-1 {
-  top: -18%;
-  left: -8%;
-  width: 46vw;
-  height: 46vw;
-  background: radial-gradient(circle, #3b5bff, transparent 70%);
-  animation: drift-1 26s ease-in-out infinite;
-}
-.aurora-blob-2 {
-  top: 6%;
-  right: -12%;
-  width: 40vw;
-  height: 40vw;
-  background: radial-gradient(circle, #22d3ee, transparent 70%);
-  animation: drift-2 32s ease-in-out infinite;
-}
-.aurora-blob-3 {
-  bottom: -20%;
-  left: 22%;
-  width: 42vw;
-  height: 42vw;
-  background: radial-gradient(circle, #b18cff, transparent 70%);
-  animation: drift-3 30s ease-in-out infinite;
-}
-
-:root[data-fx="off"] .aurora-blob {
-  animation: none;
-  opacity: 0.28;
-}
-
-@keyframes drift-1 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(6%, 8%) scale(1.12); }
-}
-@keyframes drift-2 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(-8%, 6%) scale(1.08); }
-}
-@keyframes drift-3 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(4%, -10%) scale(1.15); }
-}
-
-/* --- Cristal esmerilado: la superficie base de casi todo lo que "flota"
-   sobre el aurora -tarjetas, paneles, la cabecera. --- */
-.glass {
-  background: var(--surface-1);
-  border: 1px solid var(--border);
-  backdrop-filter: blur(var(--glass-blur)) saturate(140%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
-  box-shadow: var(--shadow-glass);
-}
-.glass-strong {
-  background: var(--surface-2);
-  border: 1px solid var(--border-strong);
-  backdrop-filter: blur(var(--glass-blur)) saturate(150%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(150%);
-  box-shadow: var(--shadow-glass);
-}
-
-/* Cristal de cabecera: mucho más opaco que el resto del cristal a propósito.
-   La cabecera es sticky y queda por encima del contenido al hacer scroll; si
-   usara la misma opacidad casi nula que una tarjeta, el texto y los colores
-   de estado de lo que pasa por debajo se leerían A TRAVÉS de ella y se
-   fundirían visualmente con la barra -justo lo que no queremos en una franja
-   de navegación. Aquí el cristal existe para separar, no para dejar ver. */
-.glass-header {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--plane) 88%, transparent),
-    color-mix(in srgb, var(--plane) 78%, transparent)
-  );
-  border: 1px solid var(--border-strong);
-  backdrop-filter: blur(28px) saturate(160%);
-  -webkit-backdrop-filter: blur(28px) saturate(160%);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.06) inset,
-    0 16px 40px -16px rgba(3, 4, 12, 0.7);
-}
-
-/* Borde en gradiente: un pixel de acento alrededor de una superficie de
-   cristal, vía doble-fondo (relleno + borde) para no pelear con backdrop-filter. */
-.glass-edge {
-  position: relative;
-}
-.glass-edge::before {
+/* Barrido: un cono de luz gira muy despacio desde una esquina, como el haz
+   de un radar de red -lento y tenue a propósito, es ambiente, no un efecto. */
+.net-field::after {
   content: "";
   position: absolute;
-  inset: 0;
-  padding: 1px;
-  border-radius: inherit;
-  background: var(--accent-gradient);
-  opacity: 0.5;
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
+  inset: -20%;
+  background: conic-gradient(
+    from 0deg at 15% 10%,
+    rgba(57, 255, 106, 0.05),
+    transparent 8%,
+    transparent 100%
+  );
+  animation: radar-sweep 22s linear infinite;
 }
-.glass-edge:hover::before {
-  opacity: 0.95;
+:root[data-fx="off"] .net-field::after {
+  animation: none;
+  opacity: 0.4;
+}
+@keyframes radar-sweep {
+  to { transform: rotate(360deg); }
+}
+
+/* --- Panel de terminal: la superficie base de casi todo -paneles,
+   tarjetas, la cabecera. Opaca de verdad, con esquinas casi rectas. --- */
+.panel {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: var(--shadow-panel);
+}
+.panel-strong {
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  box-shadow: var(--shadow-panel);
+}
+
+/* Cabecera de ventana de terminal: tres "LEDs" cuadrados + una ruta de
+   archivo monoespaciada, como la barra de título de un emulador de
+   terminal moderno (Warp/iTerm), no una pestaña de SaaS. */
+.term-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+  padding: 0.55rem 0.9rem;
+}
+.term-dots {
+  display: flex;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.term-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--axis);
+}
+.term-dots span:nth-child(1) { background: rgba(255, 77, 106, 0.55); }
+.term-dots span:nth-child(2) { background: rgba(255, 176, 32, 0.55); }
+.term-dots span:nth-child(3) { background: rgba(57, 255, 106, 0.55); }
+
+/* Esquinas de escáner: corchetes en las cuatro esquinas de una superficie,
+   como el visor de un dispositivo apuntando a un objetivo. Reservado para
+   UNA superficie por vista -la portada-, nunca decoración repetida. */
+.scan-frame {
+  position: relative;
+}
+.scan-frame::before,
+.scan-frame::after,
+.scan-frame > .scan-corner-tr,
+.scan-frame > .scan-corner-bl {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--accent);
+  opacity: 0.7;
+}
+.scan-frame::before {
+  top: -1px;
+  left: -1px;
+  border-right: none;
+  border-bottom: none;
+}
+.scan-frame::after {
+  bottom: -1px;
+  right: -1px;
+  border-left: none;
+  border-top: none;
+}
+.scan-frame > .scan-corner-tr {
+  top: -1px;
+  right: -1px;
+  border-left: none;
+  border-bottom: none;
+}
+.scan-frame > .scan-corner-bl {
+  bottom: -1px;
+  left: -1px;
+  border-right: none;
+  border-top: none;
 }
 
 /* Texto en degradado de acento: para titulares grandes, con cuentagotas. */
@@ -255,68 +241,80 @@ body {
 :root[data-fx="off"] .text-gradient {
   animation: none;
 }
-
 @keyframes gradient-pan {
   0%, 100% { background-position: 0% center; }
   50% { background-position: 100% center; }
 }
 
-/* Glow: halo suave detrás de texto/iconos de acento -reemplaza el text-shadow
-   de fósforo del tema anterior con algo que funciona sobre cristal. */
+/* Glow de fósforo: solo en texto/iconos de acento, nunca en párrafos. */
 .glow {
   filter: drop-shadow(0 0 10px var(--accent-dim));
 }
 .glow-soft {
-  filter: drop-shadow(0 0 16px rgba(124, 155, 255, 0.25));
+  filter: drop-shadow(0 0 16px rgba(57, 255, 106, 0.22));
 }
 :root[data-fx="off"] .glow,
 :root[data-fx="off"] .glow-soft {
   filter: none;
 }
 
-/* Foco de cristal: un halo suave que sigue al cursor dentro de la tarjeta,
-   como si la luz atravesara el vidrio desde donde apunta el usuario. La
-   posición la escribe JS en --mx/--my (porcentaje); la capa vive en opacidad
-   0 hasta el hover para no encarecer el repaint en reposo. */
-.spotlight {
+/* Escaneo por cursor: un foco de luz verde que sigue al puntero dentro del
+   panel, como el haz de un escáner detectando el objetivo. La posición la
+   escribe JS en --mx/--my (porcentaje). */
+.scan-glow {
   position: relative;
   isolation: isolate;
 }
-/* ::after, no ::before -algunas superficies (ServiceCard) combinan `.spotlight`
-   con `.glass-edge`, que ya ocupa el ::before de ese mismo nodo; un elemento
-   solo tiene un pseudo de cada, así que este usa el otro para no pisarlo. */
-.spotlight::after {
+.scan-glow::after {
   content: "";
   position: absolute;
   inset: 0;
-  /* Negativo a propósito: dentro del contexto de apilamiento aislado del
-     padre, esto pinta encima del fondo de cristal pero detrás de CUALQUIER
-     contenido en flujo normal, sin tener que tocar el z-index de los hijos
-     (que incluyen el filo de estado con position:absolute de ServiceCard). */
   z-index: -1;
   border-radius: inherit;
   background: radial-gradient(
-    360px circle at var(--mx, 50%) var(--my, 0%),
-    rgba(124, 155, 255, 0.16),
-    rgba(34, 211, 238, 0.06) 40%,
+    340px circle at var(--mx, 50%) var(--my, 0%),
+    rgba(57, 255, 106, 0.14),
+    rgba(77, 216, 255, 0.05) 40%,
     transparent 70%
   );
   opacity: 0;
   transition: opacity 0.4s ease;
   pointer-events: none;
 }
-.spotlight:hover::after {
+.scan-glow:hover::after {
   opacity: 1;
 }
+/* Línea de escaneo: un trazo horizontal barre el panel de arriba a abajo al
+   pasar el cursor, como un escáner de superficie. Un único gesto compartido
+   por todo lo interactivo, no un efecto distinto por componente. */
+.scan-glow::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  top: 0;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0;
+  pointer-events: none;
+}
+.scan-glow:hover::before {
+  animation: scan-sweep 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+}
+@keyframes scan-sweep {
+  0% { top: 0; opacity: 0.9; }
+  95% { opacity: 0.5; }
+  100% { top: 100%; opacity: 0; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .spotlight::after {
+  .scan-glow::after,
+  .scan-glow::before {
     display: none;
   }
 }
 
-/* Elevación al pasar el cursor: tarjetas y botones interactivos. Un único
-   idioma de hover en toda la interfaz -sube 2px, el borde se aviva, la
-   sombra crece. */
+/* Elevación al pasar el cursor: un único idioma de hover para todo lo
+   interactivo -sube 2px, el borde se aviva, la sombra crece. */
 .lift {
   transition:
     transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
@@ -326,7 +324,7 @@ body {
 }
 .lift:hover {
   transform: translateY(-3px);
-  box-shadow: var(--shadow-glass-lg);
+  box-shadow: var(--shadow-panel-lg);
   border-color: var(--border-strong);
 }
 .lift:active {
@@ -340,7 +338,7 @@ body {
 }
 
 /* Entrada escalonada: cada tarjeta/sección aparece con un ligero desfase.
-   `--stagger` lo fija cada consumidor (nth-child o estilo inline). */
+   `--stagger` lo fija cada consumidor. */
 @keyframes rise-in {
   from {
     opacity: 0;
@@ -372,13 +370,13 @@ body {
   }
 }
 
-/* Columnas de números que deben alinearse verticalmente. */
+/* Columnas de números que deben alinearse verticalmente -la mayoría del
+   texto ya es monoespaciado, pero se deja explícito por si cae un fallback. */
 .tabular {
-  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
 
-/* Etiqueta de sección: pequeño rótulo + regla en degradado que se desvanece. */
+/* Prompt de sección: "$ etiqueta ──────" en vez de un eyebrow en mayúsculas. */
 .rule-label {
   display: flex;
   align-items: center;
@@ -393,18 +391,18 @@ body {
 }
 
 ::selection {
-  background: rgba(124, 155, 255, 0.32);
+  background: rgba(57, 255, 106, 0.3);
   color: var(--text-primary);
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent-2);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 * {
-  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+  scrollbar-color: var(--axis) transparent;
   scrollbar-width: thin;
 }
 
@@ -414,10 +412,10 @@ body {
 }
 .caret {
   display: inline-block;
-  width: 0.5em;
+  width: 0.55em;
   height: 1em;
   vertical-align: text-bottom;
-  background: var(--accent-2);
+  background: var(--accent);
   animation: caret-blink 1.1s steps(1) infinite;
 }
 
@@ -430,7 +428,6 @@ body {
   animation: pulse-ring 2.4s ease-out infinite;
 }
 
-/* Anillo de pulso para estados críticos (tarjetas caídas, badges DOWN). */
 @keyframes pulse-ring-critical {
   0% { transform: scale(1); opacity: 0.5; }
   70% { transform: scale(2.2); opacity: 0; }
@@ -455,12 +452,36 @@ body {
   animation: shimmer 1.8s ease-in-out infinite;
 }
 
-@keyframes float-y {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+/* Revelado de máquina de escribir para BootSequence: un inset de clip-path
+   que se abre de izquierda a derecha, con `steps()` fijado por JS al número
+   de caracteres de cada línea para que cada paso sea exactamente un glifo. */
+@keyframes boot-type {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
 }
-.float-y {
-  animation: float-y 4s ease-in-out infinite;
+
+/* --- Traza de pulso: la onda de electrocardiograma que corre por la
+   cabecera. Dos copias del mismo trazado, una al lado de otra, desplazadas
+   con transform para que el bucle sea perfecto -sin JS. --- */
+.pulse-track {
+  overflow: hidden;
+  pointer-events: none;
+}
+.pulse-track svg {
+  display: block;
+  animation: pulse-scroll 6s linear infinite;
+}
+:root[data-fx="off"] .pulse-track svg {
+  animation-play-state: paused;
+}
+@keyframes pulse-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pulse-track svg {
+    animation: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -470,7 +491,6 @@ body {
   }
   .pulse-ring,
   .pulse-ring-critical,
-  .float-y,
   .text-gradient {
     animation: none;
     opacity: 0;

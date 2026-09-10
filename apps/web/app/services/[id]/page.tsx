@@ -62,7 +62,7 @@ export default async function ServiceDetailPage(props: PageProps<'/services/[id]
       </Link>
 
       {/* Cabecera del servicio, con el filo de estado a la izquierda */}
-      <div className="glass rise-in relative overflow-hidden rounded-3xl p-5 sm:p-6">
+      <div className="panel rise-in relative overflow-hidden p-5 sm:p-6">
         <span
           aria-hidden
           className="absolute inset-y-0 left-0 w-[3px]"
@@ -72,12 +72,12 @@ export default async function ServiceDetailPage(props: PageProps<'/services/[id]
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-3">
               <h1 className="text-xl font-semibold text-text-primary">{service.name}</h1>
-              <span className="glass rounded-full px-2 py-0.5 text-[10px] font-medium tracking-widest text-text-muted">
+              <span className="rounded border border-hairline px-2 py-0.5 text-[10px] font-medium tracking-widest text-text-muted">
                 {service.type}
               </span>
             </div>
             <p className="mt-1 truncate text-sm text-text-muted">
-              <span className="text-gradient font-medium">›</span> {service.target}
+              <span className="text-accent font-medium">›</span> {service.target}
             </p>
             {service.expectedContent && (
               <p className="mt-1 text-xs text-text-muted">
@@ -93,7 +93,7 @@ export default async function ServiceDetailPage(props: PageProps<'/services/[id]
       </div>
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="glass lift rise-in rounded-2xl p-4" style={{ '--stagger': 0 } as CSSProperties}>
+        <div className="panel scan-glow lift rise-in p-4" style={{ '--stagger': 0 } as CSSProperties}>
           <div className="text-[13px] font-medium text-text-muted">Estado actual</div>
           <div className="mt-2">
             <StatusBadge state={state} />
@@ -142,7 +142,7 @@ export default async function ServiceDetailPage(props: PageProps<'/services/[id]
         meta={
           <a
             href={`/services/${service.id}/export?hours=${hours}`}
-            className="text-text-muted transition-colors hover:text-accent-2"
+            className="text-text-muted transition-colors hover:text-accent"
           >
             ↓ exportar CSV
           </a>

@@ -7,13 +7,11 @@ type Fx = 'on' | 'off';
 const FX_EVENT = 'netpulse-fx-change';
 
 /**
- * Interruptor de movimiento: apaga el aurora de fondo animado, el glow y las
- * demás animaciones decorativas (no las de estado, como el pulso de un
- * badge caído, que son información). Pensado para quien las encuentre
- * ruidosas o para pantallas donde el blur/backdrop-filter pesa.
- *
- * El estado vive en el DOM (`data-fx`) y en localStorage, no en estado de
- * React: el script inline del layout ya lo aplica antes del primer paint.
+ * Interruptor de movimiento: apaga el barrido de radar de fondo, el glow y
+ * el resto de animaciones decorativas (no las de estado, como el pulso de
+ * un badge caído, que son información). El estado vive en el DOM
+ * (`data-fx`) y en localStorage; el script inline del layout ya lo aplica
+ * antes del primer paint.
  */
 function subscribe(onChange: () => void): () => void {
   window.addEventListener(FX_EVENT, onChange);
@@ -49,19 +47,19 @@ export function EffectsToggle() {
       onClick={toggle}
       role="switch"
       aria-checked={enabled}
-      title="Animaciones de fondo y efectos de cristal"
-      className="glass lift flex items-center gap-2 rounded-full px-3 py-1.5 text-xs tracking-wide text-text-muted hover:text-text-secondary"
+      title="Animaciones de fondo y efectos"
+      className="flex items-center gap-2 rounded border border-hairline px-2.5 py-1.5 text-xs tracking-wide text-text-muted transition-colors hover:border-hairline-strong hover:text-text-secondary"
     >
       <span
         aria-hidden
-        className="inline-block h-2 w-2 rounded-full transition-all"
+        className="inline-block h-2 w-2 rounded-full"
         style={{
-          background: enabled ? 'var(--accent-2)' : 'transparent',
-          boxShadow: enabled ? '0 0 8px var(--accent-2)' : 'none',
+          background: enabled ? 'var(--accent)' : 'transparent',
+          boxShadow: enabled ? '0 0 8px var(--accent)' : 'none',
           border: enabled ? 'none' : '1px solid var(--axis)',
         }}
       />
-      Efectos {enabled ? 'ON' : 'OFF'}
+      fx {enabled ? 'on' : 'off'}
     </button>
   );
 }

@@ -42,12 +42,9 @@ export default async function StatusPage() {
     <div className="space-y-8">
       {/* Banner de estado global: el color se apoya siempre en el badge, que
           trae icono y etiqueta. */}
-      <section className="glass-edge glass rise-in relative overflow-hidden rounded-3xl p-8 text-center sm:p-10">
-        <div
-          aria-hidden
-          className="float-y pointer-events-none absolute inset-x-0 -top-32 mx-auto h-64 w-64 rounded-full opacity-30 blur-3xl"
-          style={{ background: color }}
-        />
+      <section className="scan-frame panel rise-in relative overflow-hidden p-8 text-center sm:p-10">
+        <span className="scan-corner-tr" aria-hidden />
+        <span className="scan-corner-bl" aria-hidden />
         <span
           aria-hidden
           className="absolute inset-x-0 top-0 h-[2px]"
@@ -67,7 +64,7 @@ export default async function StatusPage() {
       <section>
         <div className="rule-label mb-4">
           <h2 className="text-sm font-medium text-text-primary">
-            <span className="text-gradient font-semibold">#</span> Servicios
+            <span className="text-accent font-semibold">#</span> Servicios
           </h2>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

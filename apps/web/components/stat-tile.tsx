@@ -19,19 +19,19 @@ function trackPointer(event: ReactPointerEvent<HTMLElement>) {
 }
 
 /**
- * Contrato de stat tile: etiqueta discreta como cabecera de campo, valor
- * grande en cifra tabular, y tendencia opcional. Cristal con elevación y un
- * foco de luz que sigue al cursor, como el resto de superficies interactivas.
+ * Contrato de stat tile: etiqueta discreta, valor grande en cifra tabular, y
+ * tendencia opcional. Un escáner de cursor -`.scan-glow`- recorre el panel
+ * al pasar el ratón, como el resto de superficies interactivas.
  */
 export function StatTile({ label, value, hint, trend, stagger }: StatTileProps) {
   const style = stagger !== undefined ? ({ '--stagger': stagger } as CSSProperties) : undefined;
   return (
     <div
-      className="rise-in glass spotlight lift relative rounded-2xl p-4"
+      className="rise-in panel scan-glow lift relative overflow-hidden p-4"
       style={style}
       onPointerMove={trackPointer}
     >
-      <div className="text-[11px] font-medium text-text-muted">{label}</div>
+      <div className="text-[13px] font-medium text-text-muted">{label}</div>
       <div className="mt-2 flex items-end justify-between gap-3">
         <div className="tabular text-2xl font-semibold text-text-primary">{value}</div>
         {trend}

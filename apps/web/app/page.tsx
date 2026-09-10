@@ -2,6 +2,7 @@ import { ApiUnavailableError, getDashboard, type ServiceOverview } from '@/lib/a
 import { formatLatency, splitVlanGroup, stateOf } from '@/lib/format';
 import { ApiUnavailable } from '@/components/api-unavailable';
 import { CountUp } from '@/components/count-up';
+import { PulseWave } from '@/components/pulse-wave';
 import { RangeFilter, parseRange } from '@/components/range-filter';
 import { ServiceCard } from '@/components/service-card';
 import { StatTile } from '@/components/stat-tile';
@@ -48,20 +49,23 @@ export default async function DashboardPage(props: PageProps<'/'>) {
 
   return (
     <div className="space-y-10">
-      {/* Hero: la cifra que lidera la vista, con el filtro que la escopa al lado */}
-      <section className="glass-edge glass rise-in relative overflow-hidden rounded-3xl p-6 sm:p-8">
-        {/* Resplandor decorativo en la esquina, sutil, detrás del contenido */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full opacity-40 blur-3xl"
-          style={{ background: 'var(--accent-gradient)' }}
-        />
+      {/* Hero: la cifra que lidera la vista, con la traza de pulso -el motivo
+          de marca, literal- corriendo detrás. Único panel con esquinas de
+          escáner: es la portada, no un adorno que se repite. */}
+      <section className="scan-frame panel rise-in relative overflow-hidden p-6 sm:p-8">
+        <span className="scan-corner-tr" aria-hidden />
+        <span className="scan-corner-bl" aria-hidden />
+
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 opacity-70">
+          <PulseWave className="w-full" />
+        </div>
+
         <div className="relative flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="text-[13px] font-medium text-text-muted">Disponibilidad global</div>
             <CountUp
               value={globalUptime}
-              className="text-gradient mt-1 block text-[56px] leading-none font-bold [font-variant-numeric:tabular-nums]"
+              className="glow mt-1 block text-[56px] leading-none font-bold text-accent [font-variant-numeric:tabular-nums]"
             />
             <p className="mt-2 text-sm text-text-muted">
               {totalChecks.toLocaleString('es-ES')} comprobaciones agregadas en la ventana
@@ -109,7 +113,7 @@ export default async function DashboardPage(props: PageProps<'/'>) {
           <section key={group}>
             <div className="rule-label mb-4">
               <h2 className="text-sm font-medium text-text-primary">
-                <span className="text-gradient font-semibold">#</span> {label}
+                <span className="text-accent font-semibold">#</span> {label}
               </h2>
               {cidr && <span className="tabular text-xs text-text-muted">{cidr}</span>}
             </div>

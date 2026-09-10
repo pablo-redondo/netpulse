@@ -23,7 +23,7 @@ export default async function TopologyPage() {
     <div className="space-y-6">
       <div className="rise-in">
         <h1 className="text-xl font-semibold text-text-primary">
-          <span className="text-gradient font-semibold">#</span> Topología
+          <span className="text-accent font-semibold">#</span> Topología
         </h1>
         <p className="mt-1 text-sm text-text-muted">
           Agrupación conceptual de los servicios monitorizados en segmentos de red.
@@ -32,7 +32,7 @@ export default async function TopologyPage() {
 
       {/* El aviso va antes del diagrama, no como nota al pie: quien llega aquí
           debe saber que está viendo antes de interpretarlo. */}
-      <div className="glass rise-in rounded-2xl p-4" style={{ '--stagger': 1 } as CSSProperties}>
+      <div className="panel rise-in p-4" style={{ '--stagger': 1 } as CSSProperties}>
         <h2 className="flex items-center gap-2 text-sm font-semibold text-text-primary">
           <span
             aria-hidden

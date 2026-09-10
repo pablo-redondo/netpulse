@@ -5,7 +5,7 @@ export default function ServiceDetailLoading() {
     <div className="space-y-6">
       <Skeleton className="h-4 w-40" />
 
-      <div className="glass rounded-3xl p-5 sm:p-6">
+      <div className="panel p-5 sm:p-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <Skeleton className="h-6 w-48" />
@@ -22,12 +22,12 @@ export default function ServiceDetailLoading() {
         <StatTileSkeleton />
       </div>
 
-      <div className="glass rounded-2xl p-4">
+      <div className="panel p-4">
         <Skeleton className="h-4 w-32" />
         <Skeleton className="mt-4 h-48 w-full" />
       </div>
 
-      <div className="glass rounded-2xl p-4">
+      <div className="panel p-4">
         <Skeleton className="h-4 w-40" />
         <Skeleton className="mt-4 h-32 w-full" />
       </div>

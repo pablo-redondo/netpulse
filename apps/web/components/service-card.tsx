@@ -7,10 +7,10 @@ import { formatLatency, formatRelative, formatUptime, stateOf } from '@/lib/form
 import { StatusBadge, statusColor } from '@/components/status-badge';
 import { UptimeBars } from '@/components/uptime-bars';
 
-// Sigue al cursor con un foco de luz dentro del cristal (clase `.spotlight`
-// en globals.css); escribe directamente en el estilo del nodo en vez de
-// pasar por estado de React, para que el gesto no dispare un re-render por
-// cada pixel de movimiento del ratón.
+// Escanea el panel al pasar el ratón (clase `.scan-glow` en globals.css);
+// escribe directamente en el estilo del nodo en vez de pasar por estado de
+// React, para que el gesto no dispare un re-render por cada pixel de
+// movimiento del ratón.
 function trackPointer(event: ReactPointerEvent<HTMLElement>) {
   const rect = event.currentTarget.getBoundingClientRect();
   event.currentTarget.style.setProperty('--mx', `${((event.clientX - rect.left) / rect.width) * 100}%`);
@@ -33,7 +33,7 @@ export function ServiceCard({
       href={`/services/${service.id}`}
       style={style}
       onPointerMove={trackPointer}
-      className="rise-in glass glass-edge spotlight lift group relative block overflow-hidden rounded-2xl p-4"
+      className="rise-in panel scan-glow lift group relative block overflow-hidden p-4"
     >
       {/* Filo de estado: refuerza el badge, nunca lo sustituye. */}
       <span
@@ -46,10 +46,10 @@ export function ServiceCard({
         <div className="min-w-0">
           <div className="truncate font-medium text-text-primary">{service.name}</div>
           <div className="mt-0.5 truncate text-xs text-text-muted">
-            <span className="text-gradient font-medium">›</span> {service.target}
+            <span className="text-accent">›</span> {service.target}
           </div>
         </div>
-        <span className="glass shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium tracking-widest text-text-muted">
+        <span className="shrink-0 rounded border border-hairline px-1.5 py-0.5 text-[10px] font-medium tracking-widest text-text-muted">
           {service.type}
         </span>
       </div>

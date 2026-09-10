@@ -10,12 +10,9 @@ export function HistoryTable({ stats }: { stats: HourlyStat[] }) {
   if (stats.length === 0) return null;
 
   return (
-    <details className="glass rise-in group overflow-hidden rounded-2xl">
+    <details className="panel rise-in group overflow-hidden">
       <summary className="flex cursor-pointer items-center gap-2 px-5 py-3 text-sm font-semibold text-text-secondary transition-colors hover:text-text-primary">
-        <span
-          aria-hidden
-          className="text-gradient font-medium transition-transform group-open:rotate-90"
-        >
+        <span aria-hidden className="text-accent font-medium transition-transform group-open:rotate-90">
           ▸
         </span>
         Ver los datos en tabla

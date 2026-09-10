@@ -1,18 +1,14 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Inter, JetBrains_Mono } from 'next/font/google';
+import { JetBrains_Mono } from 'next/font/google';
 import './globals.css';
+import { BootSequence } from '@/components/boot-sequence';
 import { EffectsToggle } from '@/components/effects-toggle';
 import { NavLink } from '@/components/nav-link';
 
-// Sans para la voz general de la interfaz; mono queda reservado a cifras y
-// timestamps (clase `.tabular`), donde las tabulares importan. Ambas se
-// auto-hospedan en el build vía next/font, sin peticiones a Google en runtime.
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
-});
+// Una sola cara, monoespaciada, para toda la interfaz: es una consola de
+// monitorización, no un dashboard con una tipografía de exposición aparte.
+// next/font la auto-hospeda en el build, sin peticiones a Google en runtime.
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
   variable: '--font-jetbrains-mono',
@@ -45,7 +41,7 @@ export const metadata: Metadata = {
 };
 
 // Aplica la preferencia de efectos antes del primer paint, para que no haya
-// un parpadeo del aurora animado en quien lo tiene desactivado.
+// un parpadeo del barrido de radar en quien lo tiene desactivado.
 const FX_INIT = `
 try {
   var f = localStorage.getItem('netpulse-fx');
@@ -54,9 +50,9 @@ try {
 `;
 
 const NAV = [
-  { href: '/', label: 'Dashboard' },
-  { href: '/topology', label: 'Topología' },
-  { href: '/status', label: 'Estado' },
+  { href: '/', label: 'dashboard' },
+  { href: '/topology', label: 'topología' },
+  { href: '/status', label: 'estado' },
 ];
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
@@ -65,23 +61,31 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
     <html
       lang="es"
-      className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${jetbrainsMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: FX_INIT }} />
       </head>
       <body className="flex min-h-full flex-col">
-        {/* Fondo fijo, detrás de todo: rejilla tenue + tres manchas de
-            gradiente a la deriva, visibles a través del cristal de los paneles. */}
-        <div className="aurora-field" aria-hidden>
-          <div className="aurora-blob aurora-blob-1" />
-          <div className="aurora-blob aurora-blob-2" />
-          <div className="aurora-blob aurora-blob-3" />
-        </div>
+        <BootSequence />
 
-        <header className="sticky top-0 z-40 px-4 pt-4 sm:px-6">
-          <div className="glass-header mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 rounded-2xl px-5 py-3">
+        {/* Fondo fijo, detrás de todo: rejilla de diagrama de red + un
+            barrido de radar muy lento. */}
+        <div className="net-field" aria-hidden />
+
+        <header className="sticky top-0 z-40 border-b border-hairline bg-surface-2 shadow-[var(--shadow-panel)]">
+          <div className="mx-auto flex w-full max-w-6xl items-center gap-2 px-4 py-2 sm:px-6">
+            <span className="term-dots" aria-hidden>
+              <span />
+              <span />
+              <span />
+            </span>
+            <span className="tabular hidden text-xs text-text-muted sm:inline">
+              ~/netpulse/panel
+            </span>
+          </div>
+          <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 border-t border-hairline px-4 py-3 sm:px-6">
             <Link href="/" className="group flex items-center gap-2.5">
               {/* Punto de "señal viva": el pulso es decorativo y se detiene
                   con prefers-reduced-motion o con los efectos apagados. */}
@@ -89,20 +93,19 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
                 <span
                   aria-hidden
                   className="pulse-ring absolute h-2.5 w-2.5 rounded-full"
-                  style={{ background: 'var(--accent-2)' }}
+                  style={{ background: 'var(--accent)' }}
                 />
                 <span
                   aria-hidden
                   className="relative h-2.5 w-2.5 rounded-full"
-                  style={{
-                    background: 'var(--accent-2)',
-                    boxShadow: '0 0 10px var(--accent-2)',
-                  }}
+                  style={{ background: 'var(--accent)', boxShadow: '0 0 10px var(--accent)' }}
                 />
               </span>
-              <span className="text-gradient text-base font-bold tracking-tight">NetPulse</span>
+              <span className="text-gradient glow text-base font-bold tracking-tight">
+                NetPulse
+              </span>
               <span className="hidden text-xs text-text-muted sm:inline">
-                monitor de red en tiempo real
+                {'// monitor de red en tiempo real'}
               </span>
             </Link>
 
@@ -120,10 +123,9 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">{children}</main>
 
         <footer className="px-4 pb-6 sm:px-6">
-          <div className="glass mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-2 rounded-2xl px-5 py-3.5 text-xs text-text-muted">
+          <div className="panel mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-2 px-5 py-3.5 text-xs text-text-muted">
             <span>
-              <span className="text-gradient font-medium">●</span> sondas HTTP · DNS · TCP · TLS ·
-              NTP
+              <span className="text-accent">$</span> probing http·dns·tcp·tls·ntp every 5min
             </span>
             <span>NestJS + Prisma + PostgreSQL · Next.js</span>
           </div>

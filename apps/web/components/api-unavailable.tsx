@@ -6,7 +6,7 @@
  */
 export function ApiUnavailable() {
   return (
-    <div className="glass rise-in rounded-2xl p-10 text-center">
+    <div className="panel rise-in p-10 text-center">
       <div className="flex items-center justify-center gap-2 text-sm">
         <span
           aria-hidden
@@ -15,13 +15,13 @@ export function ApiUnavailable() {
         />
         <span className="text-text-muted">Sin conexión</span>
       </div>
-      <h1 className="text-gradient mt-3 text-lg font-semibold">La API no responde ahora mismo</h1>
+      <h1 className="glow mt-3 text-lg font-semibold text-accent">La API no responde ahora mismo</h1>
       <p className="mx-auto mt-2 max-w-prose text-sm text-text-secondary">
         El backend puede estar arrancando tras un periodo de inactividad. Si acabas de abrir
         el panel, espera unos segundos y recarga la página.
       </p>
       <p className="mt-4 text-xs text-text-muted">
-        <span className="text-gradient font-medium">$</span> esperando respuesta del colector
+        <span className="text-accent">$</span> esperando respuesta del colector
         <span className="caret ml-1 align-middle" />
       </p>
     </div>

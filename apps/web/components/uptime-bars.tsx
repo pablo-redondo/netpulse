@@ -27,7 +27,7 @@ export function UptimeBars({ stats, label }: { stats: HourlyStat[]; label: strin
   const shown = stats.slice(-24);
   if (shown.length === 0) {
     return (
-      <div className="h-7 w-full rounded-full" style={{ background: 'var(--gridline)' }} />
+      <div className="h-7 w-full rounded-[1px]" style={{ background: 'var(--gridline)' }} />
     );
   }
 

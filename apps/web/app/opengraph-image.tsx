@@ -7,12 +7,11 @@ const PROTOCOLS = ['HTTP', 'DNS', 'TCP', 'TLS', 'NTP'];
 
 // Colores literales (no tokens CSS): esto se rasteriza en el servidor, fuera
 // del documento, asi que aqui no hay variables que resolver.
-const PLANE = '#05060d';
-const ACCENT = '#7c9bff';
-const ACCENT_GRADIENT = 'linear-gradient(120deg, #22d3ee, #7c9bff 55%, #b18cff)';
-const INK = '#f3f5fb';
-const MUTED = '#8a90ae';
-const LINE = 'rgba(255,255,255,0.08)';
+const PLANE = '#050b07';
+const ACCENT = '#39ff6a';
+const INK = '#ddffe4';
+const MUTED = '#7fa38c';
+const LINE = 'rgba(57,255,106,0.14)';
 
 export default function OpengraphImage() {
   return new ImageResponse(
@@ -47,7 +46,7 @@ export default function OpengraphImage() {
               width: 18,
               height: 18,
               borderRadius: '50%',
-              background: ACCENT_GRADIENT,
+              background: ACCENT,
               boxShadow: `0 0 24px ${ACCENT}`,
             }}
           />

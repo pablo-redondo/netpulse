@@ -81,7 +81,7 @@ export function Sparkline({ values, width = 96, height = 28, label }: SparklineP
         </>
       )}
       {/* Anillo en color de superficie: mantiene el punto legible al cruzar la línea */}
-      <circle cx={toX(last.index)} cy={toY(last.value)} r={5} fill="#0a0d1c" />
+      <circle cx={toX(last.index)} cy={toY(last.value)} r={5} fill="var(--surface-1)" />
       <circle cx={toX(last.index)} cy={toY(last.value)} r={3.5} fill="var(--series-1)" />
     </svg>
   );

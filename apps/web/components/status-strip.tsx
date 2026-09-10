@@ -27,7 +27,7 @@ export function StatusStrip({ overviews }: { overviews: ServiceOverview[] }) {
           <span
             key={overview.service.id}
             title={`${overview.service.name} — ${statusLabel(state)}`}
-            className="fade-in h-5 w-2.5 rounded-full transition-transform hover:scale-125"
+            className="fade-in h-5 w-2.5 rounded-[1px] transition-transform hover:scale-125"
             style={
               {
                 background: color,

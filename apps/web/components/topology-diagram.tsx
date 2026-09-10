@@ -116,7 +116,7 @@ export function TopologyDiagram({ overviews }: { overviews: ServiceOverview[] })
   const midY = (gatewayBottom + GROUP.y) / 2;
 
   return (
-    <div className="glass rise-in overflow-x-auto rounded-2xl p-4">
+    <div className="panel rise-in overflow-x-auto p-4">
       <svg
         viewBox={`0 0 ${CANVAS_WIDTH} ${canvasHeight}`}
         width={CANVAS_WIDTH}

@@ -83,12 +83,13 @@ export function StatusBadge({ state }: { state: ServiceState }) {
   );
 }
 
-/** Variante compacta, en píldora de cristal, para tablas y listas densas. */
+/** Variante compacta para tablas y listas densas. */
 export function StatusChip({ state }: { state: ServiceState }) {
   const meta = STATE_META[state];
   return (
     <span
-      className="glass inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium tracking-wide text-text-secondary"
+      className="inline-flex items-center gap-1.5 rounded border px-1.5 py-0.5 text-[11px] font-medium tracking-wide"
+      style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
     >
       <span
         aria-hidden

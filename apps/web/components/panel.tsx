@@ -1,9 +1,9 @@
 import type { CSSProperties, ReactNode } from 'react';
 
 /**
- * Contenedor de cristal común a la interfaz: una superficie esmerilada con
- * cabecera, que unifica bordes, título y separadores para que todas las
- * secciones se lean como parte del mismo sistema.
+ * Ventana de terminal: la superficie base de casi todo -una barra de título
+ * con "LEDs" cuadrados y una etiqueta, y el cuerpo debajo. Opaca de verdad,
+ * con esquinas casi rectas: esto es una consola, no una tarjeta con sombra.
  */
 export function Panel({
   title,
@@ -22,12 +22,14 @@ export function Panel({
 }) {
   const style = stagger !== undefined ? ({ '--stagger': stagger } as CSSProperties) : undefined;
   return (
-    <section
-      className="rise-in glass overflow-hidden rounded-2xl"
-      style={style}
-    >
-      <header className="flex items-center justify-between gap-3 border-b border-hairline px-5 py-3.5">
-        <h2 className="text-sm font-semibold text-text-primary">{title}</h2>
+    <section className="rise-in panel overflow-hidden" style={style}>
+      <header className="term-bar">
+        <span className="term-dots" aria-hidden>
+          <span />
+          <span />
+          <span />
+        </span>
+        <h2 className="flex-1 text-sm font-semibold text-text-primary">{title}</h2>
         {meta && <div className="text-xs text-text-muted">{meta}</div>}
       </header>
       <div className={bodyClassName}>{children}</div>
