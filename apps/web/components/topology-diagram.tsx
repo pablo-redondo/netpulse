@@ -1,9 +1,10 @@
 import type { ServiceOverview } from '@/lib/api';
 import { splitVlanGroup, stateOf, type ServiceState } from '@/lib/format';
+import { StateIcon, statusColor, statusIcon } from '@/components/status-badge';
 
-const CANVAS_WIDTH = 920;
-const GATEWAY = { width: 220, height: 58, y: 20 };
-const GROUP = { width: 280, gap: 20, y: 158, headerHeight: 56, rowHeight: 34, padBottom: 16 };
+const GROUP_WIDTH = 280;
+const GROUP_GAP = 20;
+const CONNECTOR_HEIGHT = 40;
 
 const STATE_COLOR: Record<ServiceState, string> = {
   up: 'var(--status-good)',
@@ -20,90 +21,21 @@ function aggregateState(states: ServiceState[]): ServiceState {
   return 'up';
 }
 
-function truncate(text: string, max = 30): string {
-  return text.length <= max ? text : `${text.slice(0, max - 1)}…`;
-}
-
 /**
- * Glifo de estado: la forma acompana al color, para que el estado no dependa
- * solo del tono.
+ * Diagrama de topología: cada segmento es una tarjeta CSS normal -no una
+ * celda dentro de un único lienzo SVG. Antes las tres cajas (SVG, con alto
+ * fijado a mano) compartían la altura del grupo con más servicios, así que
+ * un grupo con 4 servicios arrastraba el mismo alto que uno con 10 y dejaba
+ * un hueco enorme debajo. Con tarjetas reales y `items-start`, cada una mide
+ * justo lo que necesita su propio contenido -el layout normal del navegador
+ * hace el trabajo en vez de un cálculo de altura a mano.
+ *
+ * Solo el conector -tronco + ramas hacia cada grupo- sigue siendo SVG: es
+ * una franja de altura fija que no depende del contenido, así que nunca
+ * introduce hueco muerto, y comparte las mismas coordenadas en píxeles que
+ * las tarjetas de abajo (mismo ancho de columna, mismo hueco), así que
+ * quedan perfectamente alineadas sin medir nada en tiempo de ejecución.
  */
-function StateGlyph({ state, x, y }: { state: ServiceState; x: number; y: number }) {
-  const color = STATE_COLOR[state];
-  const common = {
-    stroke: color,
-    strokeWidth: 1.6,
-    fill: 'none',
-    strokeLinecap: 'round' as const,
-    strokeLinejoin: 'round' as const,
-  };
-
-  if (state === 'down') {
-    return (
-      <g transform={`translate(${x}, ${y})`}>
-        <circle cx={0} cy={0} r={5.5} {...common} />
-        <path d="M-2.2,-2.2 L2.2,2.2 M2.2,-2.2 L-2.2,2.2" {...common} />
-      </g>
-    );
-  }
-  if (state === 'unstable') {
-    return (
-      <g transform={`translate(${x}, ${y})`}>
-        <path d="M0,-6 L6.4,5.2 L-6.4,5.2 Z" {...common} />
-        <path d="M0,-2.2 L0,1 M0,3 L0,3.1" {...common} />
-      </g>
-    );
-  }
-  if (state === 'unknown') {
-    return (
-      <g transform={`translate(${x}, ${y})`}>
-        <circle cx={0} cy={0} r={5.5} {...common} />
-        <path d="M-2.4,0 L2.4,0" {...common} />
-      </g>
-    );
-  }
-  return (
-    <g transform={`translate(${x}, ${y})`}>
-      <circle cx={0} cy={0} r={5.5} {...common} />
-      <path d="M-2.6,0.2 L-0.8,2 L2.6,-1.8" {...common} />
-    </g>
-  );
-}
-
-/** Enlace con "halo": trazo ancho tenue debajo y trazo fino vivo encima. */
-function Link({ d, color }: { d: string; color: string }) {
-  return (
-    <g>
-      <path
-        d={d}
-        fill="none"
-        stroke={color}
-        strokeWidth={6}
-        strokeOpacity={0.12}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d={d}
-        fill="none"
-        stroke={color}
-        strokeWidth={1.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </g>
-  );
-}
-
-/** Alto real que necesita un grupo según sus propios servicios -no el del
- * grupo más grande. Antes las tres cajas compartían la altura del grupo con
- * más filas (VLAN 10 - Web, con 10 servicios), así que DNS e Infra -con 4 y
- * 7- arrastraban varias filas de hueco vacío al fondo. Cada caja mide ahora
- * justo lo que necesita. */
-function boxHeight(rows: number): number {
-  return GROUP.headerHeight + Math.max(rows, 1) * GROUP.rowHeight + GROUP.padBottom;
-}
-
 export function TopologyDiagram({ overviews }: { overviews: ServiceOverview[] }) {
   const groups = new Map<string, ServiceOverview[]>();
   for (const overview of overviews) {
@@ -113,210 +45,122 @@ export function TopologyDiagram({ overviews }: { overviews: ServiceOverview[] })
   const entries = [...groups.entries()].sort(([a], [b]) => a.localeCompare(b, 'es'));
 
   const columns = Math.max(entries.length, 1);
-  const totalWidth = columns * GROUP.width + (columns - 1) * GROUP.gap;
-  const startX = (CANVAS_WIDTH - totalWidth) / 2;
-
-  const tallestGroupHeight = Math.max(
-    ...entries.map(([, services]) => boxHeight(services.length)),
-    boxHeight(0),
-  );
-  const canvasHeight = GROUP.y + tallestGroupHeight + 24;
-
-  const gatewayX = (CANVAS_WIDTH - GATEWAY.width) / 2;
-  const gatewayBottom = GATEWAY.y + GATEWAY.height;
-  const midY = (gatewayBottom + GROUP.y) / 2;
+  const totalWidth = columns * GROUP_WIDTH + (columns - 1) * GROUP_GAP;
+  const trunkX = totalWidth / 2;
+  const branchY = CONNECTOR_HEIGHT / 2;
 
   return (
     <div className="panel rise-in overflow-x-auto p-4">
-      <svg
-        viewBox={`0 0 ${CANVAS_WIDTH} ${canvasHeight}`}
-        width={CANVAS_WIDTH}
-        height={canvasHeight}
-        className="h-auto max-w-full min-w-[760px]"
-        role="img"
-        aria-label="Diagrama conceptual de segmentación en VLAN. Un router central conecta los grupos de servicios monitorizados. Los datos de cada servicio están en el dashboard."
-      >
-        {/* Tronco del router en neutro: es compartido por todos los grupos, asi
-            que no puede llevar el color de estado de ninguno en concreto. */}
-        <path
-          d={`M${CANVAS_WIDTH / 2},${gatewayBottom} L${CANVAS_WIDTH / 2},${midY}`}
-          fill="none"
-          stroke="var(--axis)"
-          strokeWidth={1.5}
-          strokeLinecap="round"
-        />
+      <div className="mx-auto flex flex-col items-center" style={{ width: totalWidth }}>
+        {/* Router / gateway ilustrativo */}
+        <div className="panel-strong inline-flex items-center gap-3 px-5 py-3">
+          <span className="term-dots" aria-hidden>
+            <span />
+            <span />
+            <span />
+          </span>
+          <div>
+            <div className="text-sm font-semibold text-text-primary">Router / Gateway</div>
+            <div className="tabular text-[11px] text-text-muted">10.0.0.1</div>
+          </div>
+        </div>
 
-        {/* Ramas router → grupo. El color refleja el peor estado del grupo, que
-            ademas lleva su glifo y su etiqueta de texto. */}
-        {entries.map(([group, services], index) => {
-          const boxX = startX + index * (GROUP.width + GROUP.gap);
-          const boxCenterX = boxX + GROUP.width / 2;
-          const state = aggregateState(
-            services.map((s) => stateOf(s.latest, s.uptime.uptimePercent)),
-          );
-          return (
-            <Link
-              key={`link-${group}`}
-              d={`M${CANVAS_WIDTH / 2},${midY} L${boxCenterX},${midY} L${boxCenterX},${GROUP.y}`}
-              color={STATE_COLOR[state]}
-            />
-          );
-        })}
-
-        {/* Router / gateway ilustrativo, con "LEDs" de panel frontal */}
-        <rect
-          x={gatewayX}
-          y={GATEWAY.y}
-          width={GATEWAY.width}
-          height={GATEWAY.height}
-          rx={10}
-          fill="var(--surface-2)"
-          stroke="var(--border-strong)"
-          strokeWidth={1}
-        />
-        {[0, 1, 2, 3].map((i) => (
-          <rect
-            key={i}
-            x={gatewayX + 12 + i * 7}
-            y={GATEWAY.y + 10}
-            width={4}
-            height={4}
-            rx={1}
-            fill="var(--status-good)"
-            opacity={i === 3 ? 0.35 : 0.9}
+        <svg
+          width={totalWidth}
+          height={CONNECTOR_HEIGHT}
+          viewBox={`0 0 ${totalWidth} ${CONNECTOR_HEIGHT}`}
+          className="shrink-0"
+          aria-hidden
+        >
+          <path
+            d={`M${trunkX},0 L${trunkX},${branchY}`}
+            fill="none"
+            stroke="var(--axis)"
+            strokeWidth={1.5}
+            strokeLinecap="round"
           />
-        ))}
-        <text
-          x={CANVAS_WIDTH / 2}
-          y={GATEWAY.y + 30}
-          textAnchor="middle"
-          fontSize={13}
-          fontWeight={600}
-          fill="var(--text-primary)"
-        >
-          Router / Gateway
-        </text>
-        <text
-          x={CANVAS_WIDTH / 2}
-          y={GATEWAY.y + 47}
-          textAnchor="middle"
-          fontSize={11}
-          fill="var(--text-muted)"
-        >
-          10.0.0.1
-        </text>
-
-        {entries.map(([group, services], index) => {
-          const boxX = startX + index * (GROUP.width + GROUP.gap);
-          const { label, cidr } = splitVlanGroup(group);
-          const state = aggregateState(
-            services.map((s) => stateOf(s.latest, s.uptime.uptimePercent)),
-          );
-
-          const clipId = `group-clip-${index}`;
-          const height = boxHeight(services.length);
-
-          return (
-            <g key={group}>
-              <defs>
-                <clipPath id={clipId}>
-                  <rect x={boxX} y={GROUP.y} width={GROUP.width} height={height} rx={10} />
-                </clipPath>
-              </defs>
-              <g clipPath={`url(#${clipId})`}>
-                <rect
-                  x={boxX}
-                  y={GROUP.y}
-                  width={GROUP.width}
-                  height={height}
-                  fill="var(--surface-1)"
+          {entries.map(([group, services], index) => {
+            const cx = index * (GROUP_WIDTH + GROUP_GAP) + GROUP_WIDTH / 2;
+            const state = aggregateState(
+              services.map((s) => stateOf(s.latest, s.uptime.uptimePercent)),
+            );
+            const d = `M${trunkX},${branchY} L${cx},${branchY} L${cx},${CONNECTOR_HEIGHT}`;
+            return (
+              <g key={`link-${group}`}>
+                <path
+                  d={d}
+                  fill="none"
+                  stroke={STATE_COLOR[state]}
+                  strokeWidth={5}
+                  strokeOpacity={0.14}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
-                {/* Cabecera del segmento, con su propia banda */}
-                <rect
-                  x={boxX}
-                  y={GROUP.y}
-                  width={GROUP.width}
-                  height={GROUP.headerHeight - 6}
-                  fill="var(--surface-2)"
-                />
-                {/* Filo de estado del segmento */}
-                <rect
-                  x={boxX}
-                  y={GROUP.y}
-                  width={3}
-                  height={height}
-                  fill={STATE_COLOR[state]}
+                <path
+                  d={d}
+                  fill="none"
+                  stroke={STATE_COLOR[state]}
+                  strokeWidth={1.4}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
               </g>
-              <rect
-                x={boxX}
-                y={GROUP.y}
-                width={GROUP.width}
-                height={height}
-                rx={10}
-                fill="none"
-                stroke="var(--border)"
-                strokeWidth={1}
-              />
-              <StateGlyph state={state} x={boxX + 22} y={GROUP.y + 22} />
-              <text
-                x={boxX + 36}
-                y={GROUP.y + 26}
-                fontSize={12}
-                fontWeight={600}
-                fill="var(--text-primary)"
-              >
-                {truncate(label, 26)}
-              </text>
-              {cidr && (
-                <text x={boxX + 36} y={GROUP.y + 42} fontSize={11} fill="var(--text-muted)">
-                  {cidr}
-                </text>
-              )}
-              <line
-                x1={boxX}
-                y1={GROUP.y + GROUP.headerHeight - 6}
-                x2={boxX + GROUP.width}
-                y2={GROUP.y + GROUP.headerHeight - 6}
-                stroke="var(--border)"
-                strokeWidth={1}
-              />
+            );
+          })}
+        </svg>
 
-              {services.map((overview, rowIndex) => {
-                const rowY = GROUP.y + GROUP.headerHeight + rowIndex * GROUP.rowHeight + 12;
-                const rowState = stateOf(overview.latest, overview.uptime.uptimePercent);
-                return (
-                  <g key={overview.service.id}>
-                    <title>{`${overview.service.name} — ${overview.service.target}`}</title>
-                    {/* Marca de "puerto" del segmento al servicio */}
-                    <line
-                      x1={boxX + 2}
-                      y1={rowY}
-                      x2={boxX + 12}
-                      y2={rowY}
-                      stroke="var(--axis)"
-                      strokeWidth={1}
-                    />
-                    <StateGlyph state={rowState} x={boxX + 22} y={rowY} />
-                    <text x={boxX + 36} y={rowY + 4} fontSize={12} fill="var(--text-secondary)">
-                      {truncate(overview.service.name, 24)}
-                    </text>
-                    <text
-                      x={boxX + GROUP.width - 12}
-                      y={rowY + 4}
-                      textAnchor="end"
-                      fontSize={10}
-                      fill="var(--text-muted)"
-                    >
-                      {overview.service.type}
-                    </text>
-                  </g>
-                );
-              })}
-            </g>
-          );
-        })}
-      </svg>
+        {/* Segmentos: fila flex con `items-start`, así ninguna tarjeta se
+            estira para igualar a su vecina más alta. */}
+        <div className="flex items-start gap-5">
+          {entries.map(([group, services]) => {
+            const { label, cidr } = splitVlanGroup(group);
+            const state = aggregateState(
+              services.map((s) => stateOf(s.latest, s.uptime.uptimePercent)),
+            );
+            return (
+              <div
+                key={group}
+                className="panel overflow-hidden"
+                style={{ width: GROUP_WIDTH }}
+              >
+                <div className="term-bar">
+                  <StateIcon icon={statusIcon(state)} color={STATE_COLOR[state]} />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-semibold text-text-primary">
+                      {label}
+                    </div>
+                  </div>
+                  {cidr && (
+                    <div className="tabular shrink-0 text-[11px] text-text-muted">{cidr}</div>
+                  )}
+                </div>
+                <ul className="divide-y divide-hairline">
+                  {services.map((overview) => {
+                    const rowState = stateOf(overview.latest, overview.uptime.uptimePercent);
+                    return (
+                      <li
+                        key={overview.service.id}
+                        className="flex items-center justify-between gap-2 px-3 py-2 text-sm"
+                        title={`${overview.service.name} — ${overview.service.target}`}
+                      >
+                        <span className="flex min-w-0 items-center gap-2">
+                          <StateIcon icon={statusIcon(rowState)} color={statusColor(rowState)} />
+                          <span className="truncate text-text-secondary">
+                            {overview.service.name}
+                          </span>
+                        </span>
+                        <span className="shrink-0 text-[10px] tracking-wide text-text-muted">
+                          {overview.service.type}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }

@@ -19,7 +19,10 @@ const STATE_META: Record<
   unknown: { label: 'Sin datos', short: 'N/D', color: 'var(--text-muted)', icon: 'dash' },
 };
 
-function StateIcon({ icon, color }: { icon: string; color: string }) {
+/** Exportado para superficies densas fuera de este archivo (ej. la tarjeta
+ * de cada servicio en el diagrama de topología) que quieren el glifo solo,
+ * sin la etiqueta larga de `StatusBadge` ni la píldora de `StatusChip`. */
+export function StateIcon({ icon, color }: { icon: string; color: string }) {
   const common = {
     width: 14,
     height: 14,
@@ -103,6 +106,10 @@ export function StatusChip({ state }: { state: ServiceState }) {
 
 export function statusColor(state: ServiceState): string {
   return STATE_META[state].color;
+}
+
+export function statusIcon(state: ServiceState): 'check' | 'cross' | 'alert' | 'dash' {
+  return STATE_META[state].icon;
 }
 
 export function statusLabel(state: ServiceState): string {
