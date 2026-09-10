@@ -82,19 +82,13 @@ export interface ServiceOverview {
   history: HourlyStat[];
 }
 
-export async function getServiceOverview(
-  service: MonitoredService,
-  hours = 24,
-): Promise<ServiceOverview> {
-  const [latest, uptime, history] = await Promise.all([
-    getStatus(service.id),
-    getUptime(service.id, hours),
-    getHistory(service.id, hours),
-  ]);
-  return { service, latest, uptime, history };
-}
-
-export async function getDashboard(hours = 24): Promise<ServiceOverview[]> {
-  const services = await getServices();
-  return Promise.all(services.map((service) => getServiceOverview(service, hours)));
+// Una sola petición al backend, que ensambla ahí el overview de todos los
+// servicios. Antes esto era "1 + N*3" peticiones hechas desde aquí —listar
+// servicios y, por cada uno, status/uptime/history en paralelo—, y con 21
+// servicios eso son 64 peticiones en una sola carga de página. Cloudflare
+// Workers en el plan free corta a las 50 subpeticiones externas por
+// invocación: el dashboard dejaba de cargar con un ApiUnavailableError
+// genérico, con el backend sano de verdad. Ver DashboardService en la API.
+export function getDashboard(hours = 24): Promise<ServiceOverview[]> {
+  return getJson<ServiceOverview[]>(`/dashboard?hours=${hours}`);
 }

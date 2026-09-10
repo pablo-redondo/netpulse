@@ -8,6 +8,7 @@ import { HistoryModule } from './history/history.module';
 import { ScheduleModule } from './schedule/schedule.module';
 import { AdminModule } from './admin/admin.module';
 import { IncidentsModule } from './incidents/incidents.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { IncidentsModule } from './incidents/incidents.module';
     ScheduleModule,
     AdminModule,
     IncidentsModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],
