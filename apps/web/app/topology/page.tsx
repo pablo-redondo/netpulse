@@ -1,4 +1,3 @@
-import type { CSSProperties } from 'react';
 import { ApiUnavailableError, getDashboard, type ServiceOverview } from '@/lib/api';
 import { stateOf } from '@/lib/format';
 import { ApiUnavailable } from '@/components/api-unavailable';
@@ -31,17 +30,12 @@ export default async function TopologyPage() {
       </div>
 
       {/* El aviso va antes del diagrama, no como nota al pie: quien llega aquí
-          debe saber que está viendo antes de interpretarlo. */}
-      <div className="panel rise-in p-4" style={{ '--stagger': 1 } as CSSProperties}>
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-text-primary">
-          <span
-            aria-hidden
-            className="inline-block h-1.5 w-1.5 rounded-full"
-            style={{ background: 'var(--status-warning)', boxShadow: '0 0 6px var(--status-warning)' }}
-          />
-          Esta vista es ilustrativa, no un descubrimiento de red
-        </h2>
-        <p className="mt-2 max-w-prose text-sm text-text-secondary">
+          debe saber que está viendo antes de interpretarlo. Usa el mismo
+          chrome de ventana de terminal que el resto de paneles de la página
+          -antes llevaba su propia cabecera suelta, sin LEDs, y desentonaba
+          al lado de "Leyenda" justo debajo. */}
+      <Panel title="Esta vista es ilustrativa, no un descubrimiento de red" stagger={1}>
+        <p className="max-w-prose text-sm text-text-secondary">
           Las VLAN, las subredes y el router que aparecen abajo están{' '}
           <strong className="font-medium text-text-primary">asignados a mano</strong> a cada
           servicio monitorizado. NetPulse no tiene acceso a routers, switches ni a la
@@ -54,7 +48,7 @@ export default async function TopologyPage() {
           que sí procede de las comprobaciones HTTP, DNS, TCP, TLS y NTP efectivamente
           realizadas.
         </p>
-      </div>
+      </Panel>
 
       <TopologyDiagram overviews={overviews} />
 

@@ -95,6 +95,15 @@ function Link({ d, color }: { d: string; color: string }) {
   );
 }
 
+/** Alto real que necesita un grupo según sus propios servicios -no el del
+ * grupo más grande. Antes las tres cajas compartían la altura del grupo con
+ * más filas (VLAN 10 - Web, con 10 servicios), así que DNS e Infra -con 4 y
+ * 7- arrastraban varias filas de hueco vacío al fondo. Cada caja mide ahora
+ * justo lo que necesita. */
+function boxHeight(rows: number): number {
+  return GROUP.headerHeight + Math.max(rows, 1) * GROUP.rowHeight + GROUP.padBottom;
+}
+
 export function TopologyDiagram({ overviews }: { overviews: ServiceOverview[] }) {
   const groups = new Map<string, ServiceOverview[]>();
   for (const overview of overviews) {
@@ -107,9 +116,11 @@ export function TopologyDiagram({ overviews }: { overviews: ServiceOverview[] })
   const totalWidth = columns * GROUP.width + (columns - 1) * GROUP.gap;
   const startX = (CANVAS_WIDTH - totalWidth) / 2;
 
-  const maxRows = Math.max(...entries.map(([, services]) => services.length), 1);
-  const groupHeight = GROUP.headerHeight + maxRows * GROUP.rowHeight + GROUP.padBottom;
-  const canvasHeight = GROUP.y + groupHeight + 24;
+  const tallestGroupHeight = Math.max(
+    ...entries.map(([, services]) => boxHeight(services.length)),
+    boxHeight(0),
+  );
+  const canvasHeight = GROUP.y + tallestGroupHeight + 24;
 
   const gatewayX = (CANVAS_WIDTH - GATEWAY.width) / 2;
   const gatewayBottom = GATEWAY.y + GATEWAY.height;
@@ -203,12 +214,13 @@ export function TopologyDiagram({ overviews }: { overviews: ServiceOverview[] })
           );
 
           const clipId = `group-clip-${index}`;
+          const height = boxHeight(services.length);
 
           return (
             <g key={group}>
               <defs>
                 <clipPath id={clipId}>
-                  <rect x={boxX} y={GROUP.y} width={GROUP.width} height={groupHeight} rx={10} />
+                  <rect x={boxX} y={GROUP.y} width={GROUP.width} height={height} rx={10} />
                 </clipPath>
               </defs>
               <g clipPath={`url(#${clipId})`}>
@@ -216,7 +228,7 @@ export function TopologyDiagram({ overviews }: { overviews: ServiceOverview[] })
                   x={boxX}
                   y={GROUP.y}
                   width={GROUP.width}
-                  height={groupHeight}
+                  height={height}
                   fill="var(--surface-1)"
                 />
                 {/* Cabecera del segmento, con su propia banda */}
@@ -232,7 +244,7 @@ export function TopologyDiagram({ overviews }: { overviews: ServiceOverview[] })
                   x={boxX}
                   y={GROUP.y}
                   width={3}
-                  height={groupHeight}
+                  height={height}
                   fill={STATE_COLOR[state]}
                 />
               </g>
@@ -240,7 +252,7 @@ export function TopologyDiagram({ overviews }: { overviews: ServiceOverview[] })
                 x={boxX}
                 y={GROUP.y}
                 width={GROUP.width}
-                height={groupHeight}
+                height={height}
                 rx={10}
                 fill="none"
                 stroke="var(--border)"
