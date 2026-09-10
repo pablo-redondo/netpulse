@@ -116,7 +116,7 @@ export function TopologyDiagram({ overviews }: { overviews: ServiceOverview[] })
   const midY = (gatewayBottom + GROUP.y) / 2;
 
   return (
-    <div className="overflow-x-auto rounded border border-hairline bg-surface-1 p-4">
+    <div className="glass rise-in overflow-x-auto rounded-2xl p-4">
       <svg
         viewBox={`0 0 ${CANVAS_WIDTH} ${canvasHeight}`}
         width={CANVAS_WIDTH}
@@ -158,7 +158,7 @@ export function TopologyDiagram({ overviews }: { overviews: ServiceOverview[] })
           y={GATEWAY.y}
           width={GATEWAY.width}
           height={GATEWAY.height}
-          rx={4}
+          rx={10}
           fill="var(--surface-2)"
           stroke="var(--border-strong)"
           strokeWidth={1}
@@ -202,33 +202,49 @@ export function TopologyDiagram({ overviews }: { overviews: ServiceOverview[] })
             services.map((s) => stateOf(s.latest, s.uptime.uptimePercent)),
           );
 
+          const clipId = `group-clip-${index}`;
+
           return (
             <g key={group}>
+              <defs>
+                <clipPath id={clipId}>
+                  <rect x={boxX} y={GROUP.y} width={GROUP.width} height={groupHeight} rx={10} />
+                </clipPath>
+              </defs>
+              <g clipPath={`url(#${clipId})`}>
+                <rect
+                  x={boxX}
+                  y={GROUP.y}
+                  width={GROUP.width}
+                  height={groupHeight}
+                  fill="var(--surface-1)"
+                />
+                {/* Cabecera del segmento, con su propia banda */}
+                <rect
+                  x={boxX}
+                  y={GROUP.y}
+                  width={GROUP.width}
+                  height={GROUP.headerHeight - 6}
+                  fill="var(--surface-2)"
+                />
+                {/* Filo de estado del segmento */}
+                <rect
+                  x={boxX}
+                  y={GROUP.y}
+                  width={3}
+                  height={groupHeight}
+                  fill={STATE_COLOR[state]}
+                />
+              </g>
               <rect
                 x={boxX}
                 y={GROUP.y}
                 width={GROUP.width}
                 height={groupHeight}
-                rx={4}
-                fill="var(--surface-1)"
+                rx={10}
+                fill="none"
                 stroke="var(--border)"
                 strokeWidth={1}
-              />
-              {/* Cabecera del segmento, con su propia banda */}
-              <rect
-                x={boxX}
-                y={GROUP.y}
-                width={GROUP.width}
-                height={GROUP.headerHeight - 6}
-                fill="var(--surface-2)"
-              />
-              {/* Filo de estado del segmento */}
-              <rect
-                x={boxX}
-                y={GROUP.y}
-                width={2}
-                height={groupHeight}
-                fill={STATE_COLOR[state]}
               />
               <StateGlyph state={state} x={boxX + 22} y={GROUP.y + 22} />
               <text

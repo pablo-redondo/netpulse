@@ -25,12 +25,12 @@ export function ChecksTable({ checks }: { checks: CheckResult[] }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-[11px] tracking-widest text-text-muted uppercase">
-              <th className="px-4 py-2 font-medium">Momento</th>
-              <th className="px-4 py-2 font-medium">Resultado</th>
-              <th className="px-4 py-2 font-medium">Latencia</th>
-              <th className="px-4 py-2 font-medium">Código</th>
-              <th className="px-4 py-2 font-medium">Info técnica</th>
-              <th className="px-4 py-2 font-medium">Detalle</th>
+              <th className="px-5 py-2.5 font-medium">Momento</th>
+              <th className="px-5 py-2.5 font-medium">Resultado</th>
+              <th className="px-5 py-2.5 font-medium">Latencia</th>
+              <th className="px-5 py-2.5 font-medium">Código</th>
+              <th className="px-5 py-2.5 font-medium">Info técnica</th>
+              <th className="px-5 py-2.5 font-medium">Detalle</th>
             </tr>
           </thead>
           <tbody>
@@ -39,22 +39,22 @@ export function ChecksTable({ checks }: { checks: CheckResult[] }) {
                 key={check.id}
                 className="border-t border-hairline transition-colors hover:bg-surface-2"
               >
-                <td className="tabular whitespace-nowrap px-4 py-2 text-text-secondary">
+                <td className="tabular whitespace-nowrap px-5 py-2.5 text-text-secondary">
                   {formatDateTime(check.timestamp)}
                 </td>
-                <td className="px-4 py-2">
+                <td className="px-5 py-2.5">
                   <StatusChip state={check.success ? 'up' : 'down'} />
                 </td>
-                <td className="tabular px-4 py-2 text-text-primary">
+                <td className="tabular px-5 py-2.5 text-text-primary">
                   {formatLatency(check.latencyMs)}
                 </td>
-                <td className="tabular px-4 py-2 text-text-secondary">
+                <td className="tabular px-5 py-2.5 text-text-secondary">
                   {check.statusCode ?? '—'}
                 </td>
-                <td className="px-4 py-2 text-xs text-text-secondary">
+                <td className="px-5 py-2.5 text-xs text-text-secondary">
                   {check.details ?? '—'}
                 </td>
-                <td className="px-4 py-2 text-xs text-text-muted">
+                <td className="px-5 py-2.5 text-xs text-text-muted">
                   {check.errorMessage ?? '—'}
                 </td>
               </tr>

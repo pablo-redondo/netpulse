@@ -13,18 +13,18 @@ export default function Icon() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#050805',
+          background: '#05060d',
           borderRadius: 6,
         }}
       >
         <div
           style={{
             display: 'flex',
-            width: 12,
-            height: 12,
+            width: 14,
+            height: 14,
             borderRadius: '50%',
-            background: '#3df62d',
-            boxShadow: '0 0 0 4px rgba(61,246,45,0.35)',
+            background: 'linear-gradient(135deg, #22d3ee, #7c9bff 55%, #b18cff)',
+            boxShadow: '0 0 0 4px rgba(124,155,255,0.28)',
           }}
         />
       </div>

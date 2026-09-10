@@ -1,8 +1,8 @@
 import type { ServiceState } from '@/lib/format';
 
 // El color de status nunca carga el significado solo: cada estado va
-// siempre acompanado de icono + etiqueta de texto. Las formas de los glifos
-// son distintas entre si (no solo el color), asi que el estado se lee igual
+// siempre acompañado de icono + etiqueta de texto. Las formas de los glifos
+// son distintas entre sí (no solo el color), así que el estado se lee igual
 // sin distinguir tonos.
 const STATE_META: Record<
   ServiceState,
@@ -68,24 +68,32 @@ export function StatusBadge({ state }: { state: ServiceState }) {
   const meta = STATE_META[state];
   return (
     <span className="inline-flex items-center gap-1.5 text-sm font-medium text-text-secondary">
-      <StateIcon icon={meta.icon} color={meta.color} />
+      <span className="relative flex h-3.5 w-3.5 items-center justify-center">
+        {state === 'down' && (
+          <span
+            aria-hidden
+            className="pulse-ring-critical absolute h-3.5 w-3.5 rounded-full"
+            style={{ background: meta.color }}
+          />
+        )}
+        <StateIcon icon={meta.icon} color={meta.color} />
+      </span>
       {meta.label}
     </span>
   );
 }
 
-/** Variante compacta para tablas y listas densas. */
+/** Variante compacta, en píldora de cristal, para tablas y listas densas. */
 export function StatusChip({ state }: { state: ServiceState }) {
   const meta = STATE_META[state];
   return (
     <span
-      className="inline-flex items-center gap-1.5 rounded border px-1.5 py-0.5 text-[11px] font-medium tracking-wide"
-      style={{ borderColor: 'var(--border)', color: 'var(--text-secondary)' }}
+      className="glass inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium tracking-wide text-text-secondary"
     >
       <span
         aria-hidden
         className="inline-block h-1.5 w-1.5 rounded-full"
-        style={{ background: meta.color }}
+        style={{ background: meta.color, boxShadow: `0 0 6px ${meta.color}` }}
       />
       {meta.short}
     </span>

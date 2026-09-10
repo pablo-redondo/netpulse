@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { ApiUnavailableError, getDashboard, type ServiceOverview } from '@/lib/api';
 import { stateOf } from '@/lib/format';
 import { ApiUnavailable } from '@/components/api-unavailable';
@@ -20,23 +21,23 @@ export default async function TopologyPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="rise-in">
         <h1 className="text-xl font-semibold text-text-primary">
-          <span className="text-accent">#</span> Topología
+          <span className="text-gradient font-semibold">#</span> Topología
         </h1>
         <p className="mt-1 text-sm text-text-muted">
           Agrupación conceptual de los servicios monitorizados en segmentos de red.
         </p>
       </div>
 
-      {/* El aviso va antes del diagrama, no como nota al pie: quien llega aqui
-          debe saber que esta viendo antes de interpretarlo. */}
-      <div className="rounded border border-hairline bg-surface-1 p-4">
+      {/* El aviso va antes del diagrama, no como nota al pie: quien llega aquí
+          debe saber que está viendo antes de interpretarlo. */}
+      <div className="glass rise-in rounded-2xl p-4" style={{ '--stagger': 1 } as CSSProperties}>
         <h2 className="flex items-center gap-2 text-sm font-semibold text-text-primary">
           <span
             aria-hidden
             className="inline-block h-1.5 w-1.5 rounded-full"
-            style={{ background: 'var(--status-warning)' }}
+            style={{ background: 'var(--status-warning)', boxShadow: '0 0 6px var(--status-warning)' }}
           />
           Esta vista es ilustrativa, no un descubrimiento de red
         </h2>
@@ -57,7 +58,7 @@ export default async function TopologyPage() {
 
       <TopologyDiagram overviews={overviews} />
 
-      <Panel title="Leyenda">
+      <Panel title="Leyenda" stagger={2}>
         <div className="flex flex-wrap gap-x-6 gap-y-2">
           <StatusBadge state="up" />
           <StatusBadge state="unstable" />

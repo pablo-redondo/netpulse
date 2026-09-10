@@ -27,7 +27,7 @@ export function UptimeBars({ stats, label }: { stats: HourlyStat[]; label: strin
   const shown = stats.slice(-24);
   if (shown.length === 0) {
     return (
-      <div className="h-7 w-full rounded-sm" style={{ background: 'var(--gridline)' }} />
+      <div className="h-7 w-full rounded-full" style={{ background: 'var(--gridline)' }} />
     );
   }
 
@@ -43,7 +43,7 @@ export function UptimeBars({ stats, label }: { stats: HourlyStat[]; label: strin
         return (
           <span
             key={stat.id}
-            className="flex-1 rounded-[1px]"
+            className="flex-1 rounded-[2px] transition-transform duration-150 hover:scale-y-110"
             style={{ background: colorFor(stat) }}
             title={`${new Date(stat.hourBucket).toLocaleTimeString('es-ES', {
               hour: '2-digit',

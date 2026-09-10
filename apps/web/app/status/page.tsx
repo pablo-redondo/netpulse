@@ -21,7 +21,7 @@ const OVERALL_COPY: Record<ServiceState, string> = {
   unknown: 'Sin datos suficientes todavía.',
 };
 
-// Vista publica y simplificada, pensada para compartir sin dar acceso al
+// Vista pública y simplificada, pensada para compartir sin dar acceso al
 // resto del panel: solo estado agregado, servicios y el feed de incidentes.
 export default async function StatusPage() {
   let overviews;
@@ -36,28 +36,30 @@ export default async function StatusPage() {
   const overall = overallState(
     overviews.map((overview) => stateOf(overview.latest, overview.uptime.uptimePercent)),
   );
+  const color = statusColor(overall);
 
   return (
     <div className="space-y-8">
       {/* Banner de estado global: el color se apoya siempre en el badge, que
           trae icono y etiqueta. */}
-      <section
-        className="relative overflow-hidden rounded border border-hairline bg-surface-1 p-8 text-center"
-        style={{
-          background:
-            'radial-gradient(80% 120% at 50% 0%, color-mix(in srgb, var(--surface-2) 85%, transparent), var(--surface-1))',
-        }}
-      >
+      <section className="glass-edge glass rise-in relative overflow-hidden rounded-3xl p-8 text-center sm:p-10">
+        <div
+          aria-hidden
+          className="float-y pointer-events-none absolute inset-x-0 -top-32 mx-auto h-64 w-64 rounded-full opacity-30 blur-3xl"
+          style={{ background: color }}
+        />
         <span
           aria-hidden
           className="absolute inset-x-0 top-0 h-[2px]"
-          style={{ background: statusColor(overall) }}
+          style={{ background: color, boxShadow: `0 0 12px ${color}` }}
         />
-        <div className="flex justify-center">
+        <div className="relative flex justify-center">
           <StatusBadge state={overall} />
         </div>
-        <p className="mt-3 text-lg font-medium text-text-primary">{OVERALL_COPY[overall]}</p>
-        <p className="mt-1 text-xs text-text-muted">
+        <p className="relative mt-3 text-lg font-medium text-text-primary">
+          {OVERALL_COPY[overall]}
+        </p>
+        <p className="relative mt-1 text-xs text-text-muted">
           {overviews.length} servicios · ventana de 24 h
         </p>
       </section>
@@ -65,12 +67,12 @@ export default async function StatusPage() {
       <section>
         <div className="rule-label mb-4">
           <h2 className="text-sm font-medium text-text-primary">
-            <span className="text-accent">#</span> Servicios
+            <span className="text-gradient font-semibold">#</span> Servicios
           </h2>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {overviews.map((overview) => (
-            <ServiceCard key={overview.service.id} overview={overview} />
+          {overviews.map((overview, index) => (
+            <ServiceCard key={overview.service.id} overview={overview} stagger={index} />
           ))}
         </div>
       </section>

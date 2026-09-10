@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
@@ -55,28 +56,28 @@ export default async function ServiceDetailPage(props: PageProps<'/services/[id]
     <div className="space-y-6">
       <Link
         href="/"
-        className="inline-block text-xs text-text-muted transition-colors hover:text-text-secondary"
+        className="inline-flex items-center gap-1 text-xs text-text-muted transition-colors hover:text-text-secondary"
       >
-        ← volver al dashboard
+        <span aria-hidden>←</span> volver al dashboard
       </Link>
 
       {/* Cabecera del servicio, con el filo de estado a la izquierda */}
-      <div className="relative overflow-hidden rounded border border-hairline bg-surface-1 p-5">
+      <div className="glass rise-in relative overflow-hidden rounded-3xl p-5 sm:p-6">
         <span
           aria-hidden
           className="absolute inset-y-0 left-0 w-[3px]"
-          style={{ background: statusColor(state) }}
+          style={{ background: statusColor(state), boxShadow: `0 0 14px ${statusColor(state)}` }}
         />
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-3">
               <h1 className="text-xl font-semibold text-text-primary">{service.name}</h1>
-              <span className="rounded border border-hairline px-1.5 py-0.5 text-[10px] font-medium tracking-widest text-text-muted">
+              <span className="glass rounded-full px-2 py-0.5 text-[10px] font-medium tracking-widest text-text-muted">
                 {service.type}
               </span>
             </div>
             <p className="mt-1 truncate text-sm text-text-muted">
-              <span className="text-accent">›</span> {service.target}
+              <span className="text-gradient font-medium">›</span> {service.target}
             </p>
             {service.expectedContent && (
               <p className="mt-1 text-xs text-text-muted">
@@ -92,8 +93,8 @@ export default async function ServiceDetailPage(props: PageProps<'/services/[id]
       </div>
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded border border-hairline bg-surface-1 p-4">
-          <div className="text-[11px] tracking-widest text-text-muted uppercase">
+        <div className="glass lift rise-in rounded-2xl p-4" style={{ '--stagger': 0 } as CSSProperties}>
+          <div className="text-[11px] font-medium tracking-widest text-text-muted uppercase">
             Estado actual
           </div>
           <div className="mt-2">
@@ -112,11 +113,13 @@ export default async function ServiceDetailPage(props: PageProps<'/services/[id]
           label="Disponibilidad"
           value={formatUptime(uptime.uptimePercent)}
           hint={`${uptime.successChecks} de ${uptime.totalChecks} comprobaciones`}
+          stagger={1}
         />
         <StatTile
           label="Latencia media"
           value={formatLatency(avgLatency)}
           hint="Media de las medias horarias"
+          stagger={2}
           trend={
             <Sparkline
               values={history.map((stat) => stat.avgLatencyMs)}
@@ -128,6 +131,7 @@ export default async function ServiceDetailPage(props: PageProps<'/services/[id]
           label="Última latencia"
           value={formatLatency(latest?.latencyMs)}
           hint={statusLabel(state)}
+          stagger={3}
         />
       </section>
 
@@ -140,7 +144,7 @@ export default async function ServiceDetailPage(props: PageProps<'/services/[id]
         meta={
           <a
             href={`/services/${service.id}/export?hours=${hours}`}
-            className="text-text-muted transition-colors hover:text-accent"
+            className="text-text-muted transition-colors hover:text-accent-2"
           >
             ↓ exportar CSV
           </a>

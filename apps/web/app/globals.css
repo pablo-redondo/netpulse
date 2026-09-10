@@ -1,68 +1,70 @@
 @import "tailwindcss";
 
 /*
- * Tema "fosforo": terminal CRT de fosforo verde sobre negro.
+ * Tema "aurora glass": cristal esmerilado flotando sobre un fondo de
+ * gradientes en movimiento. Sustituye al tema "terminal CRT" anterior.
  *
- * El tema se compromete con el modo oscuro. No hay variante clara: la
- * identidad del panel ES la pantalla negra, y una version clara seria otra
- * cosa distinta disfrazada. El unico interruptor es el de efectos CRT
- * (scanlines y glow), que se apaga desde la cabecera para quien prefiera
- * menos ruido visual.
+ * Sigue comprometido con el modo oscuro -es un panel de monitorización, se
+ * lee mejor sobre negro-, pero cambia el lenguaje visual de "terminal verde
+ * fósforo" a "consola de observabilidad moderna": superficies translúcidas
+ * con `backdrop-filter: blur()`, bordes de un solo pixel casi invisibles que
+ * solo el blur revela, y una paleta de acento en gradiente cian→violeta en
+ * vez de un único verde plano.
  *
- * Los colores de estado y de serie NO son elegidos a ojo: salen de una
- * busqueda sobre OKLCH validada con el script del skill de dataviz contra
- * la superficie real (#0e130e), exigiendo separacion CVD >= 10 (objetivo 8)
- * y suelo de vision normal >= 15. Resultado medido, todos los pares:
- *   peor par CVD    ΔE 10.1  (ambar ↔ verde, deuteranopia)
- *   peor par normal ΔE 26.7
- * El verde fosforo hace doble trabajo (identidad + estado OK), asi que el
- * resto de la interfaz usa verdes DESATURADOS: si todo fuese verde neon,
- * "operativo" dejaria de significar nada.
+ * El verde/ámbar/rojo de estado se conserva -es información, no decoración,
+ * y cambiar de canal ahí sería confundir al lector- pero se afina para que
+ * conviva con el cristal: algo más saturado, con un halo de glow suave en
+ * vez del `text-shadow` de fósforo del tema anterior.
  */
 :root {
   color-scheme: dark;
 
-  /* Superficies: negro con un punto de verde, no gris neutro */
-  --plane: #050805;
-  --surface-1: #0e130e;
-  --surface-2: #141b14;
+  /* Superficies: azul-negro muy oscuro, no gris ni negro puro -deja sitio al
+     gradiente de fondo para respirar por debajo del cristal. */
+  --plane: #05060d;
+  --surface-1: rgba(255, 255, 255, 0.045);
+  --surface-2: rgba(255, 255, 255, 0.085);
+  --surface-raised: rgba(255, 255, 255, 0.12);
 
-  /* Tinta (contrastes medidos contra --surface-1) */
-  --text-primary: #e3f7e6;   /* 16.74:1 */
-  --text-secondary: #9db8a1; /*  8.77:1 */
-  --text-muted: #6f8a74;     /*  4.98:1 */
+  /* Tinta */
+  --text-primary: #f3f5fb;
+  --text-secondary: #a6acc4;
+  --text-muted: #6d7392;
 
-  /* Chrome de grafica: recesivo a proposito */
-  --gridline: #1c2a1d;
-  --axis: #2b3f2d;
-  --border: rgba(61, 246, 45, 0.14);
-  --border-strong: rgba(61, 246, 45, 0.32);
+  /* Chrome de gráfica */
+  --gridline: rgba(255, 255, 255, 0.06);
+  --axis: rgba(255, 255, 255, 0.16);
+  --border: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.22);
 
-  /* Serie categorica (una sola: latencia). Cian dentro de la banda oscura
-     (L 0.661) para no competir con el verde de estado. */
-  --series-1: #0aa0d2;
+  /* Serie categórica (latencia) */
+  --series-1: #22d3ee;
 
   /* Estado: reservado, siempre con icono + etiqueta, nunca color a secas */
-  --status-good: #3df62d;
-  --status-warning: #ea9602;
-  --status-critical: #d50b56;
-  --status-good-text: #3df62d;
-  /* Verde "OK" atenuado (3.42:1 sobre la superficie, por encima del minimo
-     de 3:1 para marcas). Se usa donde lo sano se repite mucho —barras de
-     disponibilidad, tira de sondas—: si esas superficies fuesen verde neon,
-     la pantalla entera gritaria y los incidentes dejarian de destacar. Lo
-     sano es el fondo; lo roto es lo que tiene que saltar a la vista. */
-  --status-good-dim: #23791c;
+  --status-good: #34e58c;
+  --status-warning: #f5a524;
+  --status-critical: #fb5586;
+  --status-good-text: #34e58c;
+  --status-good-dim: rgba(52, 229, 140, 0.38);
 
-  /* Acento de identidad = el verde de estado OK, usado con cuentagotas */
-  --accent: #3df62d;
-  --accent-dim: rgba(61, 246, 45, 0.55);
+  /* Acento de identidad: gradiente cian → violeta, con un extremo "sólido"
+     para donde no se pueda usar el gradiente (ej. box-shadow de foco). */
+  --accent: #7c9bff;
+  --accent-2: #22d3ee;
+  --accent-3: #b18cff;
+  --accent-dim: rgba(124, 155, 255, 0.5);
+  --accent-gradient: linear-gradient(120deg, var(--accent-2), var(--accent) 55%, var(--accent-3));
+
+  --glass-blur: 20px;
+  --shadow-glass: 0 8px 32px rgba(3, 4, 12, 0.45);
+  --shadow-glass-lg: 0 24px 60px -12px rgba(3, 4, 12, 0.65);
 }
 
 @theme inline {
   --color-plane: var(--plane);
   --color-surface-1: var(--surface-1);
   --color-surface-2: var(--surface-2);
+  --color-surface-raised: var(--surface-raised);
 
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
@@ -82,78 +84,241 @@
   --color-status-good-text: var(--status-good-text);
 
   --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-accent-3: var(--accent-3);
 
-  /* La cara mono es la voz de la interfaz entera: es un panel de maquina.
-     Ademas sus cifras ya son tabulares, que es justo lo que quieren las
-     tablas y los ejes. La variable la inyecta next/font desde el layout. */
-  --font-sans: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular",
-    "Menlo", "Consolas", monospace;
+  /* Sans es la voz de la interfaz; mono queda para cifras/timestamps, donde
+     las tabulares importan. Ambas variables las inyecta next/font. */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular",
     "Menlo", "Consolas", monospace;
 }
 
 html {
-  /* Rejilla tenue de fondo: evoca un diagrama de red / un osciloscopio sin
-     robarle atencion a los datos. */
   background-color: var(--plane);
-  background-image:
-    linear-gradient(rgba(61, 246, 45, 0.028) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(61, 246, 45, 0.028) 1px, transparent 1px);
-  background-size: 44px 44px;
-  background-position: center top;
 }
 
 body {
   color: var(--text-primary);
   font-family: var(--font-sans);
-  /* Vineta: hunde las esquinas como el cristal curvo de un CRT. */
-  background:
-    radial-gradient(120% 80% at 50% 0%, rgba(61, 246, 45, 0.05), transparent 60%),
-    radial-gradient(100% 100% at 50% 100%, rgba(0, 0, 0, 0.55), transparent 70%);
+  min-height: 100%;
+  position: relative;
 }
 
-/* Scanlines: capa fija sobre todo, no interactiva. Muy sutil a proposito —
-   una rejilla marcada destroza la legibilidad del texto pequeño. */
-body::after {
-  content: "";
+/* --- Fondo "aurora": tres manchas de gradiente que derivan muy lentamente.
+   Fijas a la ventana, detrás de todo, pensadas para verse A TRAVÉS del
+   cristal esmerilado de los paneles, nunca compitiendo con el texto. --- */
+.aurora-field {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: -1;
+  overflow: hidden;
   pointer-events: none;
-  background: repeating-linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0) 0px,
-    rgba(0, 0, 0, 0) 2px,
-    rgba(0, 0, 0, 0.16) 3px,
-    rgba(0, 0, 0, 0.16) 4px
-  );
+  background: var(--plane);
+}
+
+.aurora-field::before {
+  /* Rejilla tenue tipo diagrama de red, heredada del tema anterior pero muy
+     por debajo del aurora. */
+  content: "";
+  position: absolute;
+  inset: -2px;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(80% 60% at 50% 0%, black, transparent 75%);
+}
+
+.aurora-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.55;
+  will-change: transform;
+}
+.aurora-blob-1 {
+  top: -18%;
+  left: -8%;
+  width: 46vw;
+  height: 46vw;
+  background: radial-gradient(circle, #3b5bff, transparent 70%);
+  animation: drift-1 26s ease-in-out infinite;
+}
+.aurora-blob-2 {
+  top: 6%;
+  right: -12%;
+  width: 40vw;
+  height: 40vw;
+  background: radial-gradient(circle, #22d3ee, transparent 70%);
+  animation: drift-2 32s ease-in-out infinite;
+}
+.aurora-blob-3 {
+  bottom: -20%;
+  left: 22%;
+  width: 42vw;
+  height: 42vw;
+  background: radial-gradient(circle, #b18cff, transparent 70%);
+  animation: drift-3 30s ease-in-out infinite;
+}
+
+:root[data-fx="off"] .aurora-blob {
+  animation: none;
+  opacity: 0.28;
+}
+
+@keyframes drift-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(6%, 8%) scale(1.12); }
+}
+@keyframes drift-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-8%, 6%) scale(1.08); }
+}
+@keyframes drift-3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(4%, -10%) scale(1.15); }
+}
+
+/* --- Cristal esmerilado: la superficie base de casi todo lo que "flota"
+   sobre el aurora -tarjetas, paneles, la cabecera. --- */
+.glass {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  box-shadow: var(--shadow-glass);
+}
+.glass-strong {
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+  box-shadow: var(--shadow-glass);
+}
+
+/* Borde en gradiente: un pixel de acento alrededor de una superficie de
+   cristal, vía doble-fondo (relleno + borde) para no pelear con backdrop-filter. */
+.glass-edge {
+  position: relative;
+}
+.glass-edge::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: var(--accent-gradient);
   opacity: 0.5;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.glass-edge:hover::before {
+  opacity: 0.95;
 }
 
-/* Interruptor de efectos CRT (cabecera). Apaga scanlines y glow. */
-:root[data-crt="off"] body::after {
-  display: none;
+/* Texto en degradado de acento: para titulares grandes, con cuentagotas. */
+.text-gradient {
+  background: var(--accent-gradient);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradient-pan 8s ease infinite;
 }
-:root[data-crt="off"] .glow,
-:root[data-crt="off"] .glow-soft {
-  text-shadow: none;
+:root[data-fx="off"] .text-gradient {
+  animation: none;
 }
 
-/* Glow de fosforo: solo en texto de acento, nunca en parrafos. */
+@keyframes gradient-pan {
+  0%, 100% { background-position: 0% center; }
+  50% { background-position: 100% center; }
+}
+
+/* Glow: halo suave detrás de texto/iconos de acento -reemplaza el text-shadow
+   de fósforo del tema anterior con algo que funciona sobre cristal. */
 .glow {
-  text-shadow: 0 0 12px rgba(61, 246, 45, 0.45);
+  filter: drop-shadow(0 0 10px var(--accent-dim));
 }
 .glow-soft {
-  text-shadow: 0 0 18px rgba(61, 246, 45, 0.28);
+  filter: drop-shadow(0 0 16px rgba(124, 155, 255, 0.25));
+}
+:root[data-fx="off"] .glow,
+:root[data-fx="off"] .glow-soft {
+  filter: none;
 }
 
-/* Columnas de numeros que deben alinearse verticalmente. Con una cara mono
-   ya son tabulares, pero lo dejamos explicito por si cae un fallback. */
+/* Elevación al pasar el cursor: tarjetas y botones interactivos. Un único
+   idioma de hover en toda la interfaz -sube 2px, el borde se aviva, la
+   sombra crece. */
+.lift {
+  transition:
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.25s ease,
+    border-color 0.25s ease,
+    background-color 0.25s ease;
+}
+.lift:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-glass-lg);
+  border-color: var(--border-strong);
+}
+.lift:active {
+  transform: translateY(-1px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .lift,
+  .lift:hover {
+    transform: none;
+  }
+}
+
+/* Entrada escalonada: cada tarjeta/sección aparece con un ligero desfase.
+   `--stagger` lo fija cada consumidor (nth-child o estilo inline). */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.rise-in {
+  animation: rise-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: calc(var(--stagger, 0) * 60ms);
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.fade-in {
+  animation: fade-in 0.5s ease backwards;
+  animation-delay: calc(var(--stagger, 0) * 60ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise-in,
+  .fade-in {
+    animation: none;
+  }
+}
+
+/* Columnas de números que deben alinearse verticalmente. */
 .tabular {
+  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
 
-/* Etiqueta de seccion tipo terminal: "── ETIQUETA ──────" */
+/* Etiqueta de sección: pequeño rótulo + regla en degradado que se desvanece. */
 .rule-label {
   display: flex;
   align-items: center;
@@ -168,43 +333,74 @@ body::after {
 }
 
 ::selection {
-  background: rgba(61, 246, 45, 0.28);
+  background: rgba(124, 155, 255, 0.32);
   color: var(--text-primary);
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--accent-2);
   outline-offset: 2px;
+  border-radius: 4px;
 }
 
-/* Scrollbar a juego, sin romper el scroll nativo */
 * {
-  scrollbar-color: var(--axis) transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
   scrollbar-width: thin;
 }
 
-/* El cursor parpadeante y cualquier pulso se detienen si el sistema pide
-   menos movimiento. */
 @keyframes caret-blink {
   0%, 49% { opacity: 1; }
   50%, 100% { opacity: 0; }
 }
 .caret {
   display: inline-block;
-  width: 0.55em;
+  width: 0.5em;
   height: 1em;
   vertical-align: text-bottom;
-  background: var(--accent);
+  background: var(--accent-2);
   animation: caret-blink 1.1s steps(1) infinite;
 }
 
 @keyframes pulse-ring {
   0% { transform: scale(1); opacity: 0.55; }
-  70% { transform: scale(2.4); opacity: 0; }
-  100% { transform: scale(2.4); opacity: 0; }
+  70% { transform: scale(2.6); opacity: 0; }
+  100% { transform: scale(2.6); opacity: 0; }
 }
 .pulse-ring {
   animation: pulse-ring 2.4s ease-out infinite;
+}
+
+/* Anillo de pulso para estados críticos (tarjetas caídas, badges DOWN). */
+@keyframes pulse-ring-critical {
+  0% { transform: scale(1); opacity: 0.5; }
+  70% { transform: scale(2.2); opacity: 0; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+.pulse-ring-critical {
+  animation: pulse-ring-critical 1.8s ease-out infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(
+    100deg,
+    var(--surface-2) 30%,
+    var(--surface-raised) 50%,
+    var(--surface-2) 70%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+.float-y {
+  animation: float-y 4s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -212,7 +408,10 @@ body::after {
     animation: none;
     opacity: 1;
   }
-  .pulse-ring {
+  .pulse-ring,
+  .pulse-ring-critical,
+  .float-y,
+  .text-gradient {
     animation: none;
     opacity: 0;
   }

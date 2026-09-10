@@ -3,7 +3,7 @@ import { Skeleton, ServiceGridSkeleton } from '@/components/skeleton';
 export default function StatusLoading() {
   return (
     <div className="space-y-8">
-      <div className="rounded-lg border border-hairline bg-surface-1 p-6 text-center">
+      <div className="glass rounded-3xl p-8 text-center sm:p-10">
         <Skeleton className="mx-auto h-5 w-40" />
         <Skeleton className="mx-auto mt-3 h-4 w-64" />
       </div>
@@ -13,7 +13,7 @@ export default function StatusLoading() {
         <ServiceGridSkeleton count={9} />
       </div>
 
-      <div className="rounded-lg border border-hairline bg-surface-1 p-4">
+      <div className="glass rounded-2xl p-4">
         <Skeleton className="h-4 w-40" />
         <Skeleton className="mt-4 h-24 w-full" />
       </div>

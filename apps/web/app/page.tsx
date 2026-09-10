@@ -43,16 +43,24 @@ export default async function DashboardPage(props: PageProps<'/'>) {
   const avgLatency =
     latencies.length > 0 ? latencies.reduce((a, b) => a + b, 0) / latencies.length : null;
 
+  const groups = groupByVlan(overviews);
+
   return (
     <div className="space-y-10">
       {/* Hero: la cifra que lidera la vista, con el filtro que la escopa al lado */}
-      <section className="relative overflow-hidden rounded border border-hairline bg-surface-1 p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+      <section className="glass-edge glass rise-in relative overflow-hidden rounded-3xl p-6 sm:p-8">
+        {/* Resplandor decorativo en la esquina, sutil, detrás del contenido */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full opacity-40 blur-3xl"
+          style={{ background: 'var(--accent-gradient)' }}
+        />
+        <div className="relative flex flex-wrap items-start justify-between gap-4">
           <div>
-            <div className="text-[11px] tracking-widest text-text-muted uppercase">
+            <div className="text-[11px] font-medium tracking-widest text-text-muted uppercase">
               Disponibilidad global
             </div>
-            <div className="glow-soft mt-1 text-[56px] leading-none font-bold text-text-primary">
+            <div className="text-gradient mt-1 text-[56px] leading-none font-bold">
               {formatUptime(globalUptime)}
             </div>
             <p className="mt-2 text-sm text-text-muted">
@@ -63,9 +71,9 @@ export default async function DashboardPage(props: PageProps<'/'>) {
           <RangeFilter basePath="/" hours={hours} />
         </div>
 
-        <div className="mt-6 border-t border-hairline pt-4">
+        <div className="relative mt-6 border-t border-hairline pt-4">
           <div className="mb-2 flex items-baseline justify-between gap-3">
-            <span className="text-[11px] tracking-widest text-text-muted uppercase">
+            <span className="text-[11px] font-medium tracking-widest text-text-muted uppercase">
               Sondas activas
             </span>
             <span className="text-xs text-text-muted">
@@ -81,32 +89,35 @@ export default async function DashboardPage(props: PageProps<'/'>) {
           label="Servicios operativos"
           value={`${operational} / ${overviews.length}`}
           hint="Última comprobación correcta y sin caídas recientes"
+          stagger={0}
         />
         <StatTile
           label="Latencia media actual"
           value={formatLatency(avgLatency)}
           hint="Media de la última comprobación de cada servicio"
+          stagger={1}
         />
         <StatTile
           label="Comprobaciones registradas"
           value={totalChecks.toLocaleString('es-ES')}
           hint="Suma de todos los servicios en la ventana"
+          stagger={2}
         />
       </section>
 
-      {groupByVlan(overviews).map(([group, services]) => {
+      {groups.map(([group, services]) => {
         const { label, cidr } = splitVlanGroup(group);
         return (
           <section key={group}>
             <div className="rule-label mb-4">
               <h2 className="text-sm font-medium text-text-primary">
-                <span className="text-accent">#</span> {label}
+                <span className="text-gradient font-semibold">#</span> {label}
               </h2>
-              {cidr && <span className="text-xs text-text-muted">{cidr}</span>}
+              {cidr && <span className="tabular text-xs text-text-muted">{cidr}</span>}
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {services.map((overview) => (
-                <ServiceCard key={overview.service.id} overview={overview} />
+              {services.map((overview, index) => (
+                <ServiceCard key={overview.service.id} overview={overview} stagger={index} />
               ))}
             </div>
           </section>

@@ -59,17 +59,29 @@ export function Sparkline({ values, width = 96, height = 28, label }: SparklineP
       aria-label={`${label}: tendencia de ${points.length} puntos, último ${Math.round(last.value)} ms`}
     >
       {points.length > 1 && (
-        <path
-          d={path}
-          fill="none"
-          stroke="var(--series-1)"
-          strokeWidth={2}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+        <>
+          {/* Halo tenue bajo el trazo */}
+          <path
+            d={path}
+            fill="none"
+            stroke="var(--series-1)"
+            strokeWidth={5}
+            strokeOpacity={0.2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d={path}
+            fill="none"
+            stroke="var(--series-1)"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </>
       )}
-      {/* Anillo en color de superficie: mantiene el punto legible al cruzar la linea */}
-      <circle cx={toX(last.index)} cy={toY(last.value)} r={5} fill="var(--surface-1)" />
+      {/* Anillo en color de superficie: mantiene el punto legible al cruzar la línea */}
+      <circle cx={toX(last.index)} cy={toY(last.value)} r={5} fill="#0a0d1c" />
       <circle cx={toX(last.index)} cy={toY(last.value)} r={3.5} fill="var(--series-1)" />
     </svg>
   );

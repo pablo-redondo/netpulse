@@ -104,7 +104,7 @@ export function LatencyChart({ stats, hours }: { stats: HourlyStat[]; hours: num
 
   if (points.length === 0) {
     return (
-      <div className="flex h-40 items-center justify-center rounded border border-hairline bg-surface-1 text-sm text-text-muted">
+      <div className="glass flex h-40 items-center justify-center rounded-2xl text-sm text-text-muted">
         Todavía no hay latencias registradas en esta ventana.
       </div>
     );
@@ -116,8 +116,8 @@ export function LatencyChart({ stats, hours }: { stats: HourlyStat[]; hours: num
   if (points.length === 1) {
     const only = points[0];
     return (
-      <div className="rounded border border-hairline bg-surface-1 p-4">
-        <h2 className="text-xs font-medium tracking-widest text-text-secondary uppercase">
+      <div className="glass rounded-2xl p-4">
+        <h2 className="text-xs font-semibold tracking-widest text-text-secondary uppercase">
           Latencia media por hora
         </h2>
         <p className="mt-1 text-xs text-text-muted">Últimas {hours} h · milisegundos</p>
@@ -158,9 +158,9 @@ export function LatencyChart({ stats, hours }: { stats: HourlyStat[]; hours: num
   const last = points[points.length - 1];
 
   return (
-    <div className="rounded border border-hairline bg-surface-1 p-4">
+    <div className="glass rise-in rounded-2xl p-4">
       <div className="mb-3">
-        <h2 className="text-xs font-medium tracking-widest text-text-secondary uppercase">
+        <h2 className="text-xs font-semibold tracking-widest text-text-secondary uppercase">
           Latencia media por hora
         </h2>
         <p className="mt-1 text-xs text-text-muted">
@@ -241,13 +241,13 @@ export function LatencyChart({ stats, hours }: { stats: HourlyStat[]; hours: num
 
           {areaPath && <path d={areaPath} fill="url(#latency-area)" />}
 
-          {/* Halo tenue bajo el trazo: el "brillo de fosforo" del tema */}
+          {/* Halo suave bajo el trazo, a juego con el glow del resto del tema */}
           <path
             d={linePath}
             fill="none"
             stroke="var(--series-1)"
-            strokeWidth={6}
-            strokeOpacity={0.14}
+            strokeWidth={8}
+            strokeOpacity={0.18}
             strokeLinecap="round"
             strokeLinejoin="round"
           />
@@ -261,7 +261,7 @@ export function LatencyChart({ stats, hours }: { stats: HourlyStat[]; hours: num
           />
 
           {/* Etiqueta directa solo en el extremo, nunca en cada punto */}
-          <circle cx={last.x} cy={last.y} r={6} fill="var(--surface-1)" />
+          <circle cx={last.x} cy={last.y} r={6} fill="#0a0d1c" />
           <circle cx={last.x} cy={last.y} r={4} fill="var(--series-1)" />
 
           {/* Ticks de tiempo: primero y ultimo, para no saturar el eje */}
@@ -305,7 +305,7 @@ export function LatencyChart({ stats, hours }: { stats: HourlyStat[]; hours: num
                 stroke="var(--axis)"
                 strokeWidth={1}
               />
-              <circle cx={active.x} cy={active.y} r={6} fill="var(--surface-1)" />
+              <circle cx={active.x} cy={active.y} r={6} fill="#0a0d1c" />
               <circle cx={active.x} cy={active.y} r={4} fill="var(--series-1)" />
             </>
           )}
@@ -313,7 +313,7 @@ export function LatencyChart({ stats, hours }: { stats: HourlyStat[]; hours: num
 
         {active && (
           <div
-            className="pointer-events-none absolute z-10 rounded border border-hairline-strong bg-plane px-3 py-2 shadow-lg"
+            className="glass-strong pointer-events-none absolute z-10 rounded-xl px-3 py-2"
             style={{
               left: Math.min(Math.max(active.x - 60, 0), Math.max(width - 150, 0)),
               // Se coloca encima del punto dejando aire; si no cabe arriba,

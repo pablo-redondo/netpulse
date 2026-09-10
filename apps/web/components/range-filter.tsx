@@ -12,14 +12,14 @@ export function parseRange(value: string | undefined): number {
 }
 
 /**
- * Fila unica de filtro, por encima de todo lo que escopa: cada stat, grafica
- * y tabla de la pagina se recalcula contra la misma ventana. Se presenta como
- * un control segmentado; el seleccionado lleva ademas aria-current, no solo
- * un fondo distinto.
+ * Fila única de filtro, por encima de todo lo que escopa: cada stat, gráfica
+ * y tabla de la página se recalcula contra la misma ventana. Se presenta como
+ * un control segmentado de cristal; el seleccionado lleva además
+ * `aria-current`, no solo un fondo distinto.
  */
 export function RangeFilter({ basePath, hours }: { basePath: string; hours: number }) {
   return (
-    <div className="inline-flex items-center gap-1 rounded border border-hairline p-0.5">
+    <div className="glass inline-flex items-center gap-1 rounded-full p-1">
       {RANGES.map((range) => {
         const selected = range.hours === hours;
         return (
@@ -29,8 +29,16 @@ export function RangeFilter({ basePath, hours }: { basePath: string; hours: numb
             aria-current={selected ? 'true' : undefined}
             className={
               selected
-                ? 'rounded-sm bg-surface-2 px-3 py-1 text-xs font-medium text-accent'
-                : 'rounded-sm px-3 py-1 text-xs text-text-muted transition-colors hover:text-text-secondary'
+                ? 'rounded-full px-3 py-1 text-xs font-medium text-text-primary transition-all'
+                : 'rounded-full px-3 py-1 text-xs text-text-muted transition-all hover:text-text-secondary'
+            }
+            style={
+              selected
+                ? {
+                    background: 'var(--accent-gradient)',
+                    color: '#050311',
+                  }
+                : undefined
             }
           >
             {range.label}
