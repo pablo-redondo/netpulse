@@ -81,7 +81,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
         </div>
 
         <header className="sticky top-0 z-40 px-4 pt-4 sm:px-6">
-          <div className="glass mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 rounded-2xl px-5 py-3">
+          <div className="glass-header mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 rounded-2xl px-5 py-3">
             <Link href="/" className="group flex items-center gap-2.5">
               {/* Punto de "señal viva": el pulso es decorativo y se detiene
                   con prefers-reduced-motion o con los efectos apagados. */}

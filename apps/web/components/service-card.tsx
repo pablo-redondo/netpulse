@@ -1,9 +1,21 @@
-import type { CSSProperties } from 'react';
+'use client';
+
+import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
 import Link from 'next/link';
 import type { ServiceOverview } from '@/lib/api';
 import { formatLatency, formatRelative, formatUptime, stateOf } from '@/lib/format';
 import { StatusBadge, statusColor } from '@/components/status-badge';
 import { UptimeBars } from '@/components/uptime-bars';
+
+// Sigue al cursor con un foco de luz dentro del cristal (clase `.spotlight`
+// en globals.css); escribe directamente en el estilo del nodo en vez de
+// pasar por estado de React, para que el gesto no dispare un re-render por
+// cada pixel de movimiento del ratón.
+function trackPointer(event: ReactPointerEvent<HTMLElement>) {
+  const rect = event.currentTarget.getBoundingClientRect();
+  event.currentTarget.style.setProperty('--mx', `${((event.clientX - rect.left) / rect.width) * 100}%`);
+  event.currentTarget.style.setProperty('--my', `${((event.clientY - rect.top) / rect.height) * 100}%`);
+}
 
 export function ServiceCard({
   overview,
@@ -20,7 +32,8 @@ export function ServiceCard({
     <Link
       href={`/services/${service.id}`}
       style={style}
-      className="rise-in glass glass-edge lift group relative block overflow-hidden rounded-2xl p-4"
+      onPointerMove={trackPointer}
+      className="rise-in glass glass-edge spotlight lift group relative block overflow-hidden rounded-2xl p-4"
     >
       {/* Filo de estado: refuerza el badge, nunca lo sustituye. */}
       <span

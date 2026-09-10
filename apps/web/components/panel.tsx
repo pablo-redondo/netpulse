@@ -27,9 +27,7 @@ export function Panel({
       style={style}
     >
       <header className="flex items-center justify-between gap-3 border-b border-hairline px-5 py-3.5">
-        <h2 className="text-xs font-semibold tracking-widest text-text-secondary uppercase">
-          {title}
-        </h2>
+        <h2 className="text-sm font-semibold text-text-primary">{title}</h2>
         {meta && <div className="text-xs text-text-muted">{meta}</div>}
       </header>
       <div className={bodyClassName}>{children}</div>

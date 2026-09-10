@@ -94,9 +94,7 @@ export default async function ServiceDetailPage(props: PageProps<'/services/[id]
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="glass lift rise-in rounded-2xl p-4" style={{ '--stagger': 0 } as CSSProperties}>
-          <div className="text-[11px] font-medium tracking-widest text-text-muted uppercase">
-            Estado actual
-          </div>
+          <div className="text-[13px] font-medium text-text-muted">Estado actual</div>
           <div className="mt-2">
             <StatusBadge state={state} />
           </div>

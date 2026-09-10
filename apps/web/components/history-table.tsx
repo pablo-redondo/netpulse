@@ -11,7 +11,7 @@ export function HistoryTable({ stats }: { stats: HourlyStat[] }) {
 
   return (
     <details className="glass rise-in group overflow-hidden rounded-2xl">
-      <summary className="flex cursor-pointer items-center gap-2 px-5 py-3 text-xs font-semibold tracking-widest text-text-secondary uppercase transition-colors hover:text-text-primary">
+      <summary className="flex cursor-pointer items-center gap-2 px-5 py-3 text-sm font-semibold text-text-secondary transition-colors hover:text-text-primary">
         <span
           aria-hidden
           className="text-gradient font-medium transition-transform group-open:rotate-90"

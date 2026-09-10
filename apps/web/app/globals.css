@@ -198,6 +198,26 @@ body {
   box-shadow: var(--shadow-glass);
 }
 
+/* Cristal de cabecera: mucho más opaco que el resto del cristal a propósito.
+   La cabecera es sticky y queda por encima del contenido al hacer scroll; si
+   usara la misma opacidad casi nula que una tarjeta, el texto y los colores
+   de estado de lo que pasa por debajo se leerían A TRAVÉS de ella y se
+   fundirían visualmente con la barra -justo lo que no queremos en una franja
+   de navegación. Aquí el cristal existe para separar, no para dejar ver. */
+.glass-header {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--plane) 88%, transparent),
+    color-mix(in srgb, var(--plane) 78%, transparent)
+  );
+  border: 1px solid var(--border-strong);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 16px 40px -16px rgba(3, 4, 12, 0.7);
+}
+
 /* Borde en gradiente: un pixel de acento alrededor de una superficie de
    cristal, vía doble-fondo (relleno + borde) para no pelear con backdrop-filter. */
 .glass-edge {
@@ -252,6 +272,46 @@ body {
 :root[data-fx="off"] .glow,
 :root[data-fx="off"] .glow-soft {
   filter: none;
+}
+
+/* Foco de cristal: un halo suave que sigue al cursor dentro de la tarjeta,
+   como si la luz atravesara el vidrio desde donde apunta el usuario. La
+   posición la escribe JS en --mx/--my (porcentaje); la capa vive en opacidad
+   0 hasta el hover para no encarecer el repaint en reposo. */
+.spotlight {
+  position: relative;
+  isolation: isolate;
+}
+/* ::after, no ::before -algunas superficies (ServiceCard) combinan `.spotlight`
+   con `.glass-edge`, que ya ocupa el ::before de ese mismo nodo; un elemento
+   solo tiene un pseudo de cada, así que este usa el otro para no pisarlo. */
+.spotlight::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* Negativo a propósito: dentro del contexto de apilamiento aislado del
+     padre, esto pinta encima del fondo de cristal pero detrás de CUALQUIER
+     contenido en flujo normal, sin tener que tocar el z-index de los hijos
+     (que incluyen el filo de estado con position:absolute de ServiceCard). */
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(
+    360px circle at var(--mx, 50%) var(--my, 0%),
+    rgba(124, 155, 255, 0.16),
+    rgba(34, 211, 238, 0.06) 40%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+.spotlight:hover::after {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .spotlight::after {
+    display: none;
+  }
 }
 
 /* Elevación al pasar el cursor: tarjetas y botones interactivos. Un único

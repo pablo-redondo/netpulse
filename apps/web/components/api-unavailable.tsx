@@ -13,7 +13,7 @@ export function ApiUnavailable() {
           className="inline-block h-2 w-2 rounded-full"
           style={{ background: 'var(--status-warning)', boxShadow: '0 0 8px var(--status-warning)' }}
         />
-        <span className="tracking-widest text-text-muted uppercase">Sin conexión</span>
+        <span className="text-text-muted">Sin conexión</span>
       </div>
       <h1 className="text-gradient mt-3 text-lg font-semibold">La API no responde ahora mismo</h1>
       <p className="mx-auto mt-2 max-w-prose text-sm text-text-secondary">

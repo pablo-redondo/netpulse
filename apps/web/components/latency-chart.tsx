@@ -117,7 +117,7 @@ export function LatencyChart({ stats, hours }: { stats: HourlyStat[]; hours: num
     const only = points[0];
     return (
       <div className="glass rounded-2xl p-4">
-        <h2 className="text-xs font-semibold tracking-widest text-text-secondary uppercase">
+        <h2 className="text-sm font-semibold text-text-primary">
           Latencia media por hora
         </h2>
         <p className="mt-1 text-xs text-text-muted">Últimas {hours} h · milisegundos</p>
@@ -160,7 +160,7 @@ export function LatencyChart({ stats, hours }: { stats: HourlyStat[]; hours: num
   return (
     <div className="glass rise-in rounded-2xl p-4">
       <div className="mb-3">
-        <h2 className="text-xs font-semibold tracking-widest text-text-secondary uppercase">
+        <h2 className="text-sm font-semibold text-text-primary">
           Latencia media por hora
         </h2>
         <p className="mt-1 text-xs text-text-muted">

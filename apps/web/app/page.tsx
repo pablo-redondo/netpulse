@@ -1,6 +1,7 @@
 import { ApiUnavailableError, getDashboard, type ServiceOverview } from '@/lib/api';
-import { formatLatency, formatUptime, splitVlanGroup, stateOf } from '@/lib/format';
+import { formatLatency, splitVlanGroup, stateOf } from '@/lib/format';
 import { ApiUnavailable } from '@/components/api-unavailable';
+import { CountUp } from '@/components/count-up';
 import { RangeFilter, parseRange } from '@/components/range-filter';
 import { ServiceCard } from '@/components/service-card';
 import { StatTile } from '@/components/stat-tile';
@@ -57,12 +58,11 @@ export default async function DashboardPage(props: PageProps<'/'>) {
         />
         <div className="relative flex flex-wrap items-start justify-between gap-4">
           <div>
-            <div className="text-[11px] font-medium tracking-widest text-text-muted uppercase">
-              Disponibilidad global
-            </div>
-            <div className="text-gradient mt-1 text-[56px] leading-none font-bold">
-              {formatUptime(globalUptime)}
-            </div>
+            <div className="text-[13px] font-medium text-text-muted">Disponibilidad global</div>
+            <CountUp
+              value={globalUptime}
+              className="text-gradient mt-1 block text-[56px] leading-none font-bold [font-variant-numeric:tabular-nums]"
+            />
             <p className="mt-2 text-sm text-text-muted">
               {totalChecks.toLocaleString('es-ES')} comprobaciones agregadas en la ventana
               seleccionada
@@ -73,9 +73,7 @@ export default async function DashboardPage(props: PageProps<'/'>) {
 
         <div className="relative mt-6 border-t border-hairline pt-4">
           <div className="mb-2 flex items-baseline justify-between gap-3">
-            <span className="text-[11px] font-medium tracking-widest text-text-muted uppercase">
-              Sondas activas
-            </span>
+            <span className="text-[13px] font-medium text-text-muted">Sondas activas</span>
             <span className="text-xs text-text-muted">
               {overviews.length} servicios públicos
             </span>
