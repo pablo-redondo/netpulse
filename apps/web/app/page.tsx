@@ -49,24 +49,25 @@ export default async function DashboardPage(props: PageProps<'/'>) {
 
   return (
     <div className="space-y-10">
-      {/* Hero: la cifra que lidera la vista, con la traza de pulso -el motivo
-          de marca, literal- corriendo detrás. Único panel con esquinas de
-          escáner: es la portada, no un adorno que se repite. */}
+      {/* Hero: la cifra que lidera la vista. La traza de pulso -el motivo de
+          marca, literal- va como lectura de monitor junto al número, no de
+          fondo a todo el ancho: ahí competía con la tira de sondas de abajo
+          y quedaba cortada por la esquina de escáner. Único panel con
+          esquinas de escáner: es la portada, no un adorno que se repite. */}
       <section className="scan-frame panel rise-in relative overflow-hidden p-6 sm:p-8">
         <span className="scan-corner-tr" aria-hidden />
         <span className="scan-corner-bl" aria-hidden />
 
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 opacity-70">
-          <PulseWave className="w-full" />
-        </div>
-
         <div className="relative flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="text-[13px] font-medium text-text-muted">Disponibilidad global</div>
-            <CountUp
-              value={globalUptime}
-              className="glow mt-1 block text-[56px] leading-none font-bold text-accent [font-variant-numeric:tabular-nums]"
-            />
+            <div className="mt-1 flex flex-wrap items-end gap-4">
+              <CountUp
+                value={globalUptime}
+                className="glow block text-[56px] leading-none font-bold text-accent [font-variant-numeric:tabular-nums]"
+              />
+              <PulseWave className="mb-2.5 hidden opacity-80 sm:block" />
+            </div>
             <p className="mt-2 text-sm text-text-muted">
               {totalChecks.toLocaleString('es-ES')} comprobaciones agregadas en la ventana
               seleccionada
