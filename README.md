@@ -232,7 +232,8 @@ En `apps/api`:
 
 | Variable | Por defecto | Para qué |
 |---|---|---|
-| `DATABASE_URL` | — | Cadena de conexión a PostgreSQL. Obligatoria |
+| `DATABASE_URL` | — | Cadena de conexión a PostgreSQL. Obligatoria. En Neon, la que lleva pooler |
+| `DIRECT_URL` | `DATABASE_URL` | Cadena sin pooler, solo para `prisma migrate deploy`. En local se omite |
 | `PORT` | `3000` | Puerto del backend. El `.env.example` lo pone en `3001` para no chocar con Next |
 | `CHECK_INTERVAL_MS` | `300000` | Cada cuánto se lanza la ronda de comprobaciones |
 | `ALERT_WEBHOOK_URL` | — | Opcional. Webhook de Discord/Slack para avisos de caída/recuperación |
@@ -373,18 +374,42 @@ El backend no podría irse a Workers aunque quisiéramos: además del scheduler,
 los checks TCP, TLS y NTP abren sockets crudos —UDP en el caso de NTP— que el
 runtime de Workers no ofrece.
 
+### Base de datos (Neon)
+
+La base de datos está en [Neon](https://neon.com) y **no** en Render, por una
+razón aprendida a base de perderla: el Postgres gratuito de Render caduca a
+los 30 días y se lleva los datos con él. Pasó, y se llevó por delante el
+histórico entero. El plan gratuito de Neon no caduca por antigüedad.
+
+Neon da dos cadenas de conexión, y **no son intercambiables**:
+
+| Variable | Cadena | Para qué |
+|---|---|---|
+| `DATABASE_URL` | con pooler (el host lleva `-pooler`) | la aplicación en marcha |
+| `DIRECT_URL` | sin pooler | solo `prisma migrate deploy` |
+
+Las migraciones tienen que ir por la cadena directa. El pooler de Neon es
+pgBouncer en modo transacción: devuelve la conexión al pool en cuanto termina
+cada transacción, y una migración necesita estado de sesión —locks de aviso,
+DDL transaccional—, así que por el pooler falla. Quien reparte cada cadena a
+su sitio es `apps/api/prisma.config.ts`, que solo lo lee el CLI de Prisma; la
+aplicación abre su propia conexión aparte en `PrismaService`. En local no hay
+pooler, así que basta con `DATABASE_URL` y `DIRECT_URL` se puede omitir.
+
+Ambas cadenas terminan en `?sslmode=require`.
+
 ### Backend (Render)
 
-Hay un `render.yaml` en la raíz que describe el servicio y la base de datos,
-así que no hace falta rellenar formularios a mano:
+Hay un `render.yaml` en la raíz que describe el servicio:
 
 1. En Render, "New +" → "Blueprint", y apuntar al repo en la rama `main`.
-   Render lee `render.yaml` y propone crear `netpulse-db` (Postgres) y
-   `netpulse-api` (el backend). Se aceptan los dos.
-2. El build ya se encarga de instalar, compilar `shared-types`, aplicar las
-   migraciones de Prisma y compilar el backend, en ese orden. No hay que
-   tocar nada más para que arranque.
-3. Sembrar el catálogo es cosa de una vez, con un `POST` al endpoint de
+   Render lee `render.yaml` y propone crear `netpulse-api`.
+2. Rellenar a mano, en Environment, las dos cadenas de Neon: `DATABASE_URL` y
+   `DIRECT_URL`. Van marcadas como `sync: false` en el blueprint porque son
+   secretos y no pueden vivir en el repo.
+3. El build ya se encarga de instalar, compilar `shared-types`, aplicar las
+   migraciones de Prisma y compilar el backend, en ese orden.
+4. Sembrar el catálogo es cosa de una vez, con un `POST` al endpoint de
    sembrado. `SEED_SECRET` lo genera el propio blueprint —está en la pestaña
    Environment del servicio en Render—:
 
@@ -400,16 +425,26 @@ así que no hace falta rellenar formularios a mano:
    no se puede lanzar desde la barra del navegador —esa es justamente la
    idea—: hace falta `curl` o cualquier cliente HTTP.
 
-4. Opcional: para recibir alertas de caídas y recuperaciones en Discord o
+5. Opcional: para recibir alertas de caídas y recuperaciones en Discord o
    Slack, añadir `ALERT_WEBHOOK_URL` a mano en Environment con la URL del
    webhook entrante. Sin esto, NetPulse funciona igual; simplemente no avisa.
 
-El plan `free` de Render dura lo justo para comprobar que todo esto funciona:
-el servicio se duerme a los 15 minutos sin tráfico HTTP —y con él, el
-scheduler, así que el histórico se queda con huecos mientras tanto— y la base
-de datos gratis expira a los 30 días. Para que esto sea un monitor de verdad y
-no un experimento de fin de semana, el paso siguiente es subir `netpulse-api`
-a un plan de pago tipo Starter, que no se duerme.
+El plan `free` de Render duerme el servicio a los 15 minutos sin tráfico HTTP,
+y con él el scheduler, así que el histórico se queda con huecos mientras
+tanto. Para que esto sea un monitor de verdad y no un experimento de fin de
+semana, el paso siguiente es subir `netpulse-api` a un plan de pago tipo
+Starter, que no se duerme.
+
+Ese reposo tiene un efecto útil de rebote: con la API dormida nadie consulta
+la base de datos, así que Neon la suspende también —escala a cero a los 5
+minutos de inactividad— y no se consumen las 100 CU-hora al mes del plan
+gratuito. Las dos capas gratuitas duermen juntas.
+
+Una consecuencia de tener `prisma migrate deploy` dentro del `buildCommand`:
+si la base de datos no responde, el despliegue falla entero y tampoco se
+pueden subir arreglos. Es el precio de no arrancar nunca con el esquema
+desactualizado, y compensa, pero conviene saberlo cuando un deploy se queda
+bloqueado sin motivo aparente.
 
 ### Frontend (Cloudflare Workers)
 
@@ -465,8 +500,8 @@ enseña un aviso en vez de un error pelado.
 
 ## Estado del proyecto
 
-Desplegado y funcionando: backend en Render, frontend en Cloudflare Workers, base de
-datos sembrada y el scheduler corriendo de verdad contra los servicios
+Desplegado y funcionando: backend en Render, frontend en Cloudflare Workers,
+base de datos en Neon y el scheduler corriendo de verdad contra los servicios
 públicos del catálogo.
 
 Lo que falta:

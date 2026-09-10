@@ -1,15 +1,16 @@
-# Blueprint de Render para el backend. El frontend (apps/web) va a Vercel
-# por separado, ver README.md.
+# Blueprint de Render para el backend. El frontend (apps/web) va a Cloudflare
+# Workers por separado, ver README.md.
 #
-# El plan "free" de Render duerme el servicio a los 15 min sin trafico HTTP
-# (parando el scheduler con el) y su Postgres gratis expira a los 30 dias.
-# Sirve para probar el despliegue sin coste; para monitorizacion continua
-# real hace falta subir el servicio web a un plan de pago (ej. "starter").
-databases:
-  - name: netpulse-db
-    plan: free
-    region: oregon
-
+# La base de datos NO se declara aqui: vive en Neon. El Postgres gratis de
+# Render caduca a los 30 dias y se lleva los datos por delante —nos paso—, asi
+# que DATABASE_URL se rellena a mano con la cadena de Neon en vez de venir de
+# un `fromDatabase`.
+#
+# El plan "free" de Render sigue durmiendo el servicio a los 15 min sin
+# trafico HTTP, parando el scheduler con el. Para monitorizacion continua real
+# hace falta subir el servicio web a un plan de pago (ej. "starter"). Ese
+# reposo tiene un efecto util de rebote: con la API dormida no se consultan
+# los 100 CU-hora al mes del plan gratuito de Neon.
 services:
   - type: web
     name: netpulse-api
@@ -29,10 +30,18 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "22"
+      # Cadena CON pooler de Neon (el host lleva "-pooler") y ?sslmode=require.
+      # La usa la app en marcha. Se rellena a mano en el dashboard: es un
+      # secreto, no puede vivir en el repo.
       - key: DATABASE_URL
-        fromDatabase:
-          name: netpulse-db
-          property: connectionString
+        sync: false
+      # Cadena SIN pooler, para `prisma migrate deploy`. No es un capricho:
+      # el pooler de Neon (pgBouncer en modo transaccion) devuelve la conexion
+      # al pool al acabar cada transaccion, y las migraciones necesitan estado
+      # de sesion —locks de aviso, DDL transaccional—, asi que por el pooler
+      # fallan. Ver prisma.config.ts.
+      - key: DIRECT_URL
+        sync: false
       - key: CHECK_INTERVAL_MS
         value: "300000"
       - key: SEED_SECRET
